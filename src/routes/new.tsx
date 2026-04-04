@@ -128,16 +128,6 @@ function CreateEventPage() {
         />
       </Field>
 
-      <Field label="설명 (선택)">
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="모임에 대한 설명을 입력하세요"
-          rows={2}
-          className="input"
-        />
-      </Field>
-
       <Field label="모임 시간">
         <select
           value={durationMinutes}
@@ -180,6 +170,16 @@ function CreateEventPage() {
           </p>
         </Field>
       </div>
+
+      <Field label="설명 (선택)">
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="모임에 대한 설명을 입력하세요"
+          rows={2}
+          className="input"
+        />
+      </Field>
 
       <button
         type="submit"
