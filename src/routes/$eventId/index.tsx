@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { getEvent } from '../../server/functions/events'
 import { submitAvailability } from '../../server/functions/participants'
+import { saveLocalEvent } from '../../lib/local-events'
 import {
   parseAvailabilityText,
   type ParsedSlot,
@@ -76,6 +77,13 @@ function RespondPage() {
             status: s.status,
           })),
         },
+      })
+      saveLocalEvent({
+        eventId: event.id,
+        title: event.title,
+        role: 'participant',
+        name: name.trim(),
+        createdAt: new Date().toISOString(),
       })
       setSubmitted(true)
     } catch (err) {

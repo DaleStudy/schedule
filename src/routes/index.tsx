@@ -1,10 +1,26 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useState, useEffect } from 'react'
 import { createEvent } from '../server/functions/events'
+import { getLocalEvents, saveLocalEvent, type LocalEvent } from '../lib/local-events'
 
 export const Route = createFileRoute('/')({
-  component: CreateEventPage,
+  component: HomePage,
 })
+
+function HomePage() {
+  const [localEvents, setLocalEvents] = useState<LocalEvent[]>([])
+
+  useEffect(() => {
+    setLocalEvents(getLocalEvents())
+  }, [])
+
+  return (
+    <div className="space-y-8">
+      {localEvents.length > 0 && <MyEvents events={localEvents} />}
+      <CreateEventPage />
+    </div>
+  )
+}
 
 function CreateEventPage() {
   const [title, setTitle] = useState('')
@@ -47,6 +63,13 @@ function CreateEventPage() {
           eventDateEnd: eventDateEnd.toISOString(),
           responseDeadlineAt: responseDeadlineAt.toISOString(),
         },
+      })
+      saveLocalEvent({
+        eventId: res.eventId,
+        title,
+        role: 'admin',
+        adminToken: res.adminToken,
+        createdAt: new Date().toISOString(),
       })
       setResult(res)
     } catch (err) {
@@ -189,6 +212,38 @@ function Field({
         {label}
       </label>
       {children}
+    </div>
+  )
+}
+
+function MyEvents({ events }: { events: LocalEvent[] }) {
+  return (
+    <div>
+      <h2 className="mb-3 text-lg font-bold">내 모임</h2>
+      <div className="divide-y rounded-lg border">
+        {events.map((e) => (
+          <Link
+            key={`${e.eventId}-${e.role}`}
+            to={
+              e.role === 'admin'
+                ? `/${e.eventId}/admin`
+                : `/${e.eventId}`
+            }
+            search={e.role === 'admin' ? { token: e.adminToken! } : {}}
+            className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
+          >
+            <div>
+              <span className="font-medium">{e.title}</span>
+              <span className="ml-2 text-xs text-gray-400">
+                {e.role === 'admin' ? '주최' : '참여'}
+              </span>
+            </div>
+            <span className="text-xs text-gray-400">
+              {new Date(e.createdAt).toLocaleDateString('ko-KR')}
+            </span>
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }
