@@ -20,7 +20,7 @@ export const parseAvailabilityText = createServerFn({ method: 'POST' })
     const today = new Date().toISOString().split('T')[0]
 
     const response = (await env.AI.run(
-      '@cf/meta/llama-3.1-8b-instruct',
+      '@cf/meta/llama-3.1-8b-instruct-fast',
       {
         max_tokens: 2048,
         messages: [
