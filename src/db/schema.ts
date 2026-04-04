@@ -42,14 +42,16 @@ export const participants = sqliteTable(
       .notNull()
       .references(() => events.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
-    token: text('token').notNull().unique(),
     timezone: text('timezone'),
     respondedAt: text('responded_at'),
     createdAt: text('created_at')
       .notNull()
       .$defaultFn(() => new Date().toISOString()),
   },
-  (table) => [index('idx_participants_event').on(table.eventId)],
+  (table) => [
+    index('idx_participants_event').on(table.eventId),
+    index('idx_participants_event_name').on(table.eventId, table.name),
+  ],
 )
 
 export const availabilitySlots = sqliteTable(

@@ -2,12 +2,8 @@ import { createServerFn } from '@tanstack/react-start'
 import { env } from 'cloudflare:workers'
 import { eq, and } from 'drizzle-orm'
 import { getDb } from '../../db'
-import { events, participants } from '../../db/schema'
-import {
-  generateEventId,
-  generateAdminToken,
-  generateParticipantToken,
-} from '../../lib/tokens'
+import { events } from '../../db/schema'
+import { generateEventId, generateAdminToken } from '../../lib/tokens'
 import { nowUTC } from '../../lib/time'
 
 export const createEvent = createServerFn({ method: 'POST' })
@@ -20,7 +16,6 @@ export const createEvent = createServerFn({ method: 'POST' })
       eventDateStart: string
       eventDateEnd: string
       responseDeadlineAt: string
-      participantNames: string[]
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -40,25 +35,7 @@ export const createEvent = createServerFn({ method: 'POST' })
       responseDeadlineAt: data.responseDeadlineAt,
     })
 
-    const participantRecords = data.participantNames.map((name) => ({
-      id: generateEventId(),
-      eventId,
-      name,
-      token: generateParticipantToken(),
-    }))
-
-    if (participantRecords.length > 0) {
-      await db.insert(participants).values(participantRecords)
-    }
-
-    return {
-      eventId,
-      adminToken,
-      participants: participantRecords.map((p) => ({
-        name: p.name,
-        token: p.token,
-      })),
-    }
+    return { eventId, adminToken }
   })
 
 export const getEvent = createServerFn({ method: 'GET' })
@@ -72,7 +49,7 @@ export const getEvent = createServerFn({ method: 'GET' })
     if (!event) throw new Error('Event not found')
 
     const eventParticipants = await db.query.participants.findMany({
-      where: eq(participants.eventId, data.eventId),
+      where: eq(events.id, data.eventId),
     })
 
     return {
@@ -97,7 +74,7 @@ export const getEventByAdminToken = createServerFn({ method: 'GET' })
     if (!event) throw new Error('Event not found')
 
     const eventParticipants = await db.query.participants.findMany({
-      where: eq(participants.eventId, event.id),
+      where: eq(events.id, event.id),
     })
 
     return {
@@ -105,7 +82,6 @@ export const getEventByAdminToken = createServerFn({ method: 'GET' })
       participants: eventParticipants.map((p) => ({
         id: p.id,
         name: p.name,
-        token: p.token,
         respondedAt: p.respondedAt,
         timezone: p.timezone,
       })),
@@ -117,8 +93,6 @@ export const confirmEvent = createServerFn({ method: 'POST' })
     (input: {
       eventId: string
       adminToken: string
-      confirmedStart: string
-      confirmedEnd: string
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -132,15 +106,39 @@ export const confirmEvent = createServerFn({ method: 'POST' })
     })
     if (!event) throw new Error('Event not found or unauthorized')
 
+    // 최적 시간 계산
+    const { findOptimalTime } = await import('../../lib/optimal-time')
+    const allSlots = await db.query.availabilitySlots.findMany({
+      where: eq(events.id, data.eventId),
+    })
+    const allParticipants = await db.query.participants.findMany({
+      where: eq(events.id, data.eventId),
+    })
+
+    const optimal = findOptimalTime(
+      allSlots.map((s) => ({
+        participantId: s.participantId,
+        startAt: s.startAt,
+        endAt: s.endAt,
+        status: s.status as 'available' | 'unavailable',
+      })),
+      event.durationMinutes,
+      event.eventDateStart,
+      event.eventDateEnd,
+      allParticipants.length,
+    )
+
+    if (!optimal) throw new Error('참여 가능한 공통 시간을 찾을 수 없습니다.')
+
     await db
       .update(events)
       .set({
         status: 'confirmed',
-        confirmedStart: data.confirmedStart,
-        confirmedEnd: data.confirmedEnd,
+        confirmedStart: optimal.start,
+        confirmedEnd: optimal.end,
         updatedAt: nowUTC(),
       })
       .where(eq(events.id, data.eventId))
 
-    return { success: true }
+    return { success: true, optimal }
   })

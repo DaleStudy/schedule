@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { createEvent } from '../server/functions/events'
 
@@ -7,18 +7,15 @@ export const Route = createFileRoute('/')({
 })
 
 function CreateEventPage() {
-  const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [durationMinutes, setDurationMinutes] = useState(60)
   const [eventWeeks, setEventWeeks] = useState(2)
   const [deadlineDaysBefore, setDeadlineDaysBefore] = useState(7)
-  const [participantsText, setParticipantsText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<{
     eventId: string
     adminToken: string
-    participants: Array<{ name: string; token: string }>
   } | null>(null)
 
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -28,22 +25,15 @@ function CreateEventPage() {
     setIsSubmitting(true)
 
     try {
-      const names = participantsText
-        .split(',')
-        .map((n) => n.trim())
-        .filter(Boolean)
-      if (names.length === 0) {
-        alert('참여자를 최소 1명 이상 입력해주세요.')
-        setIsSubmitting(false)
-        return
-      }
       const now = new Date()
       const eventDateStart = new Date(now)
       eventDateStart.setDate(now.getDate() + 1)
       const eventDateEnd = new Date(now)
       eventDateEnd.setDate(now.getDate() + eventWeeks * 7)
       const responseDeadlineAt = new Date(eventDateStart)
-      responseDeadlineAt.setDate(eventDateStart.getDate() - deadlineDaysBefore)
+      responseDeadlineAt.setDate(
+        eventDateStart.getDate() - deadlineDaysBefore,
+      )
       if (responseDeadlineAt <= now) {
         responseDeadlineAt.setTime(now.getTime() + 24 * 60 * 60 * 1000)
       }
@@ -56,7 +46,6 @@ function CreateEventPage() {
           eventDateStart: eventDateStart.toISOString(),
           eventDateEnd: eventDateEnd.toISOString(),
           responseDeadlineAt: responseDeadlineAt.toISOString(),
-          participantNames: names,
         },
       })
       setResult(res)
@@ -68,8 +57,9 @@ function CreateEventPage() {
   }
 
   if (result) {
-    const baseUrl = window.location.origin
-    const adminUrl = `${baseUrl}/event/${result.eventId}/admin?token=${result.adminToken}`
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+    const respondUrl = `${baseUrl}/${result.eventId}`
+    const adminUrl = `${baseUrl}/${result.eventId}/admin?token=${result.adminToken}`
 
     return (
       <div className="space-y-6">
@@ -85,36 +75,24 @@ function CreateEventPage() {
         <div className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              주최자 관리 링크
+              참여자 공유 링크
             </label>
-            <CopyField value={adminUrl} />
+            <CopyField value={respondUrl} />
+            <p className="mt-1 text-xs text-gray-500">
+              이 링크 하나로 모든 참여자가 응답할 수 있습니다.
+            </p>
           </div>
 
           <div>
-            <h3 className="mb-2 text-sm font-medium text-gray-700">
-              참여자별 응답 링크
-            </h3>
-            <div className="space-y-2">
-              {result.participants.map((p) => (
-                <div key={p.token} className="flex items-center gap-2">
-                  <span className="w-24 truncate text-sm font-medium">
-                    {p.name}
-                  </span>
-                  <CopyField
-                    value={`${baseUrl}/event/${result.eventId}/respond?token=${p.token}`}
-                  />
-                </div>
-              ))}
-            </div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              주최자 관리 링크
+            </label>
+            <CopyField value={adminUrl} />
+            <p className="mt-1 text-xs text-gray-500">
+              이 링크는 본인만 보관하세요.
+            </p>
           </div>
         </div>
-
-        <button
-          onClick={() => navigate({ to: `/event/${result.eventId}/admin`, search: { token: result.adminToken } })}
-          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-        >
-          관리 대시보드로 이동
-        </button>
       </div>
     )
   }
@@ -187,20 +165,6 @@ function CreateEventPage() {
         </Field>
       </div>
 
-      <Field label="참여자">
-        <input
-          type="text"
-          required
-          value={participantsText}
-          onChange={(e) => setParticipantsText(e.target.value)}
-          placeholder="예: 달레, 샘, 에반"
-          className="input"
-        />
-        <p className="mt-1 text-xs text-gray-500">
-          쉼표(,)로 구분하여 입력하세요.
-        </p>
-      </Field>
-
       <button
         type="submit"
         disabled={isSubmitting}
@@ -239,12 +203,12 @@ function CopyField({ value }: { value: string }) {
   }
 
   return (
-    <div className="flex flex-1 items-center gap-2 rounded border bg-gray-50 px-3 py-2">
-      <span className="flex-1 truncate text-xs text-gray-600">{value}</span>
+    <div className="flex items-center gap-2 rounded border bg-gray-50 px-3 py-2">
+      <span className="flex-1 truncate text-sm text-gray-600">{value}</span>
       <button
         type="button"
         onClick={copy}
-        className="shrink-0 text-xs font-medium text-blue-600 hover:text-blue-800"
+        className="shrink-0 text-sm font-medium text-blue-600 hover:text-blue-800"
       >
         {copied ? '복사됨!' : '복사'}
       </button>
