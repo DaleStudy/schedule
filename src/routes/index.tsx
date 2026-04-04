@@ -13,7 +13,7 @@ function CreateEventPage() {
   const [durationMinutes, setDurationMinutes] = useState(60)
   const [eventWeeks, setEventWeeks] = useState(2)
   const [deadlineDaysBefore, setDeadlineDaysBefore] = useState(7)
-  const [participantNames, setParticipantNames] = useState([''])
+  const [participantsText, setParticipantsText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<{
     eventId: string
@@ -23,21 +23,20 @@ function CreateEventPage() {
 
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-  const addParticipant = () => setParticipantNames([...participantNames, ''])
-  const removeParticipant = (idx: number) =>
-    setParticipantNames(participantNames.filter((_, i) => i !== idx))
-  const updateParticipant = (idx: number, name: string) => {
-    const updated = [...participantNames]
-    updated[idx] = name
-    setParticipantNames(updated)
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
     try {
-      const names = participantNames.filter((n) => n.trim())
+      const names = participantsText
+        .split(',')
+        .map((n) => n.trim())
+        .filter(Boolean)
+      if (names.length === 0) {
+        alert('참여자를 최소 1명 이상 입력해주세요.')
+        setIsSubmitting(false)
+        return
+      }
       const now = new Date()
       const eventDateStart = new Date(now)
       eventDateStart.setDate(now.getDate() + 1)
@@ -188,41 +187,19 @@ function CreateEventPage() {
         </Field>
       </div>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          참여자
-        </label>
-        <div className="space-y-2">
-          {participantNames.map((name, idx) => (
-            <div key={idx} className="flex gap-2">
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => updateParticipant(idx, e.target.value)}
-                placeholder={`참여자 ${idx + 1} 이름`}
-                className="input flex-1"
-              />
-              {participantNames.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeParticipant(idx)}
-                  className="rounded px-3 text-red-500 hover:bg-red-50"
-                >
-                  삭제
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={addParticipant}
-          className="mt-2 text-sm text-blue-600 hover:text-blue-800"
-        >
-          + 참여자 추가
-        </button>
-      </div>
+      <Field label="참여자">
+        <input
+          type="text"
+          required
+          value={participantsText}
+          onChange={(e) => setParticipantsText(e.target.value)}
+          placeholder="김철수, 이영희, 박민수"
+          className="input"
+        />
+        <p className="mt-1 text-xs text-gray-500">
+          쉼표(,)로 구분하여 입력하세요.
+        </p>
+      </Field>
 
       <button
         type="submit"
