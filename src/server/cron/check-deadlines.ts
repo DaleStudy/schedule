@@ -39,7 +39,11 @@ export async function checkDeadlines(d1: D1Database) {
       allParticipants.length,
     )
 
-    if (optimal) {
+    const meetsMinimum =
+      !event.minParticipants ||
+      (optimal && optimal.availableCount >= event.minParticipants)
+
+    if (optimal && meetsMinimum) {
       await db
         .update(events)
         .set({
@@ -50,7 +54,6 @@ export async function checkDeadlines(d1: D1Database) {
         })
         .where(eq(events.id, event.id))
     } else {
-      // 응답이 하나도 없는 경우에만 취소
       await db
         .update(events)
         .set({

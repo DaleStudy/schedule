@@ -15,6 +15,13 @@
       "when": 1775314560791,
       "tag": "0001_fine_komodo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1775321787331,
+      "tag": "0002_violet_namor",
+      "breakpoints": true
     }
   ]
 }

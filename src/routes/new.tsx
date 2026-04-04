@@ -14,6 +14,7 @@ function CreateEventPage() {
   const [durationMinutes, setDurationMinutes] = useState(60)
   const [eventWeeks, setEventWeeks] = useState(2)
   const [deadlineDaysBefore, setDeadlineDaysBefore] = useState(7)
+  const [minParticipants, setMinParticipants] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<{
     eventId: string
@@ -48,6 +49,7 @@ function CreateEventPage() {
           eventDateStart: eventDateStart.toISOString(),
           eventDateEnd: eventDateEnd.toISOString(),
           responseDeadlineAt: responseDeadlineAt.toISOString(),
+          minParticipants: minParticipants ? Number(minParticipants) : undefined,
         },
       })
       saveLocalEvent({
@@ -170,6 +172,20 @@ function CreateEventPage() {
           </p>
         </Field>
       </div>
+
+      <Field label="최소 인원 (선택)">
+        <input
+          type="number"
+          min={2}
+          value={minParticipants}
+          onChange={(e) => setMinParticipants(e.target.value)}
+          placeholder="미설정 시 인원 제한 없음"
+          className="input"
+        />
+        <p className="mt-1 text-xs text-gray-500">
+          이 인원 미만이면 모임이 성사되지 않습니다.
+        </p>
+      </Field>
 
       <Field label="설명 (선택)">
         <textarea

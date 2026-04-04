@@ -1,0 +1,1 @@
+ALTER TABLE `events` ADD `min_participants` integer;

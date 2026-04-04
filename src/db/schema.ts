@@ -12,6 +12,7 @@ export const events = sqliteTable(
     eventDateStart: text('event_date_start').notNull(),
     eventDateEnd: text('event_date_end').notNull(),
     responseDeadlineAt: text('response_deadline_at').notNull(),
+    minParticipants: integer('min_participants'),
     status: text('status', {
       enum: ['pending', 'confirmed', 'cancelled'],
     })

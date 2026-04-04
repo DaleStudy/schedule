@@ -19,6 +19,7 @@ function createTestDb() {
       event_date_start TEXT NOT NULL,
       event_date_end TEXT NOT NULL,
       response_deadline_at TEXT NOT NULL,
+      min_participants INTEGER,
       status TEXT NOT NULL DEFAULT 'pending',
       confirmed_start TEXT,
       confirmed_end TEXT,

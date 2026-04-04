@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { env } from 'cloudflare:workers'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, inArray } from 'drizzle-orm'
 import { getDb } from '../../db'
 import { events, participants, availabilitySlots } from '../../db/schema'
 import { generateEventId, generateAdminToken } from '../../lib/tokens'
@@ -16,6 +16,7 @@ export const createEvent = createServerFn({ method: 'POST' })
       eventDateStart: string
       eventDateEnd: string
       responseDeadlineAt: string
+      minParticipants?: number
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -33,6 +34,7 @@ export const createEvent = createServerFn({ method: 'POST' })
       eventDateStart: data.eventDateStart,
       eventDateEnd: data.eventDateEnd,
       responseDeadlineAt: data.responseDeadlineAt,
+      minParticipants: data.minParticipants,
     })
 
     return { eventId, adminToken }
@@ -145,6 +147,15 @@ export const confirmEvent = createServerFn({ method: 'POST' })
 
     if (!optimal) throw new Error('참여 가능한 공통 시간을 찾을 수 없습니다.')
 
+    if (
+      event.minParticipants &&
+      optimal.availableCount < event.minParticipants
+    ) {
+      throw new Error(
+        `최소 ${event.minParticipants}명이 참여해야 하지만, 최적 시간에 ${optimal.availableCount}명만 가능합니다.`,
+      )
+    }
+
     await db
       .update(events)
       .set({
@@ -194,4 +205,25 @@ export const updateEvent = createServerFn({ method: 'POST' })
     await db.update(events).set(updates).where(eq(events.id, data.eventId))
 
     return { success: true }
+  })
+
+export const getEventStatuses = createServerFn({ method: 'POST' })
+  .inputValidator((input: { eventIds: string[] }) => input)
+  .handler(async ({ data }) => {
+    if (data.eventIds.length === 0) return []
+    const db = getDb(env.DB)
+
+    const results = await db
+      .select({
+        id: events.id,
+        status: events.status,
+        confirmedStart: events.confirmedStart,
+        confirmedEnd: events.confirmedEnd,
+        eventDateEnd: events.eventDateEnd,
+      })
+      .from(events)
+      .where(inArray(events.id, data.eventIds))
+      .all()
+
+    return results
   })
