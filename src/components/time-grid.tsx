@@ -124,14 +124,14 @@ export function TimeGrid({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <table className="border-collapse text-xs">
+      <table className="w-full border-collapse text-xs">
         <thead>
           <tr>
             <th className="sticky left-0 z-10 bg-white px-2 py-1" />
             {days.map((day) => (
               <th
                 key={day}
-                className="min-w-[60px] border-b px-1 py-2 text-center font-medium"
+                className="border-b px-1 py-2 text-center font-medium"
               >
                 <div>{dayjs(day).format('M/D')}</div>
                 <div className="text-gray-400">
@@ -165,7 +165,6 @@ export function TimeGrid({
                           : 'hover:bg-gray-100'
                     } ${time.endsWith(':00') ? 'border-t-gray-300' : 'border-t-gray-100'}`}
                     style={{
-                      width: 60,
                       height: 20,
                       backgroundColor:
                         !status && heatCount > 0
