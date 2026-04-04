@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { Database } from 'bun:sqlite'
 import { drizzle } from 'drizzle-orm/bun-sqlite'
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import * as schema from '../../db/schema'
 
 const { events, participants, availabilitySlots } = schema
@@ -152,5 +152,42 @@ describe('가용시간 슬롯 조회', () => {
   it('다른 이벤트 슬롯이 섞이지 않음', () => {
     const result = db.select().from(availabilitySlots).where(eq(availabilitySlots.eventId, 'event-2')).all()
     expect(result).toHaveLength(1)
+  })
+})
+
+describe('이벤트 수정', () => {
+  let db: ReturnType<typeof createTestDb>
+
+  beforeEach(() => {
+    db = createTestDb()
+    seedEvent(db, 'event-1')
+    seedEvent(db, 'event-2')
+  })
+
+  it('adminToken이 일치하면 제목 수정 가능', () => {
+    db.update(events).set({ title: '수정된 제목' }).where(
+      and(eq(events.id, 'event-1'), eq(events.adminToken, 'admin-event-1'))
+    ).run()
+
+    const updated = db.select().from(events).where(eq(events.id, 'event-1')).all()
+    expect(updated[0].title).toBe('수정된 제목')
+  })
+
+  it('다른 이벤트에 영향을 주지 않음', () => {
+    db.update(events).set({ title: '수정됨' }).where(
+      and(eq(events.id, 'event-1'), eq(events.adminToken, 'admin-event-1'))
+    ).run()
+
+    const other = db.select().from(events).where(eq(events.id, 'event-2')).all()
+    expect(other[0].title).toBe('Test Event')
+  })
+
+  it('잘못된 adminToken으로는 수정되지 않음', () => {
+    db.update(events).set({ title: '해킹' }).where(
+      and(eq(events.id, 'event-1'), eq(events.adminToken, 'wrong-token'))
+    ).run()
+
+    const unchanged = db.select().from(events).where(eq(events.id, 'event-1')).all()
+    expect(unchanged[0].title).toBe('Test Event')
   })
 })

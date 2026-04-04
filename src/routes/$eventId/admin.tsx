@@ -3,6 +3,7 @@ import { useState } from 'react'
 import {
   getEventByAdminToken,
   confirmEvent,
+  updateEvent,
 } from '../../server/functions/events'
 
 interface AdminSearch {
@@ -125,35 +126,141 @@ function AdminDashboard() {
           <CopyField value={`${baseUrl}/${event.id}`} />
         </div>
 
-        <div className="rounded-lg border p-4">
-          <h3 className="mb-2 text-sm font-medium text-gray-700">
-            이벤트 정보
-          </h3>
-          <dl className="space-y-1 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-gray-500">모임 가능 기간</dt>
-              <dd>
-                {new Date(event.eventDateStart).toLocaleDateString('ko-KR')} ~{' '}
-                {new Date(event.eventDateEnd).toLocaleDateString('ko-KR')}
-              </dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-gray-500">모임 시간</dt>
-              <dd>{event.durationMinutes}분</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-gray-500">상태</dt>
-              <dd>
-                {event.status === 'pending'
-                  ? '대기 중'
-                  : event.status === 'confirmed'
-                    ? '확정됨'
-                    : '취소됨'}
-              </dd>
-            </div>
-          </dl>
+        <EventInfoSection event={event} adminToken={token} />
+      </div>
+    </div>
+  )
+}
+
+function EventInfoSection({
+  event,
+  adminToken,
+}: {
+  event: { id: string; title: string; description: string | null; durationMinutes: number; eventDateStart: string; eventDateEnd: string; responseDeadlineAt: string; status: string }
+  adminToken: string
+}) {
+  const [editing, setEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [title, setTitle] = useState(event.title)
+  const [description, setDescription] = useState(event.description || '')
+  const [durationMinutes, setDurationMinutes] = useState(event.durationMinutes)
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    try {
+      await updateEvent({
+        data: {
+          eventId: event.id,
+          adminToken,
+          title,
+          description: description || undefined,
+          durationMinutes,
+        },
+      })
+      setEditing(false)
+      window.location.reload()
+    } catch (err) {
+      alert((err as Error).message)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  if (editing) {
+    return (
+      <div className="space-y-3 rounded-lg border p-4">
+        <h3 className="text-sm font-medium text-gray-700">이벤트 수정</h3>
+        <div>
+          <label className="mb-1 block text-xs text-gray-500">제목</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="input"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-gray-500">설명</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={2}
+            className="input"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-gray-500">모임 시간</label>
+          <select
+            value={durationMinutes}
+            onChange={(e) => setDurationMinutes(Number(e.target.value))}
+            className="input"
+          >
+            <option value={30}>30분</option>
+            <option value={60}>1시간</option>
+            <option value={90}>1시간 30분</option>
+            <option value={120}>2시간</option>
+          </select>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleSave}
+            disabled={isSaving || !title.trim()}
+            className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {isSaving ? '저장 중...' : '저장'}
+          </button>
+          <button
+            onClick={() => {
+              setTitle(event.title)
+              setDescription(event.description || '')
+              setDurationMinutes(event.durationMinutes)
+              setEditing(false)
+            }}
+            className="rounded border px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+          >
+            취소
+          </button>
         </div>
       </div>
+    )
+  }
+
+  return (
+    <div className="rounded-lg border p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-sm font-medium text-gray-700">이벤트 정보</h3>
+        {event.status === 'pending' && (
+          <button
+            onClick={() => setEditing(true)}
+            className="text-xs text-blue-600 hover:underline"
+          >
+            수정
+          </button>
+        )}
+      </div>
+      <dl className="space-y-1 text-sm">
+        <div className="flex justify-between">
+          <dt className="text-gray-500">모임 가능 기간</dt>
+          <dd>
+            {new Date(event.eventDateStart).toLocaleDateString('ko-KR')} ~{' '}
+            {new Date(event.eventDateEnd).toLocaleDateString('ko-KR')}
+          </dd>
+        </div>
+        <div className="flex justify-between">
+          <dt className="text-gray-500">모임 시간</dt>
+          <dd>{event.durationMinutes}분</dd>
+        </div>
+        <div className="flex justify-between">
+          <dt className="text-gray-500">상태</dt>
+          <dd>
+            {event.status === 'pending'
+              ? '대기 중'
+              : event.status === 'confirmed'
+                ? '확정됨'
+                : '취소됨'}
+          </dd>
+        </div>
+      </dl>
     </div>
   )
 }

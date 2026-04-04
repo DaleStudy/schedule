@@ -142,3 +142,41 @@ export const confirmEvent = createServerFn({ method: 'POST' })
 
     return { success: true, optimal }
   })
+
+export const updateEvent = createServerFn({ method: 'POST' })
+  .inputValidator(
+    (input: {
+      eventId: string
+      adminToken: string
+      title?: string
+      description?: string
+      durationMinutes?: number
+      eventDateStart?: string
+      eventDateEnd?: string
+      responseDeadlineAt?: string
+    }) => input,
+  )
+  .handler(async ({ data }) => {
+    const db = getDb(env.DB)
+
+    const event = await db.query.events.findFirst({
+      where: and(
+        eq(events.id, data.eventId),
+        eq(events.adminToken, data.adminToken),
+      ),
+    })
+    if (!event) throw new Error('Event not found or unauthorized')
+    if (event.status !== 'pending') throw new Error('확정/취소된 일정은 수정할 수 없습니다.')
+
+    const updates: Record<string, unknown> = { updatedAt: nowUTC() }
+    if (data.title !== undefined) updates.title = data.title
+    if (data.description !== undefined) updates.description = data.description
+    if (data.durationMinutes !== undefined) updates.durationMinutes = data.durationMinutes
+    if (data.eventDateStart !== undefined) updates.eventDateStart = data.eventDateStart
+    if (data.eventDateEnd !== undefined) updates.eventDateEnd = data.eventDateEnd
+    if (data.responseDeadlineAt !== undefined) updates.responseDeadlineAt = data.responseDeadlineAt
+
+    await db.update(events).set(updates).where(eq(events.id, data.eventId))
+
+    return { success: true }
+  })
