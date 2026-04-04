@@ -33,9 +33,9 @@ export function TimeGrid({
   heatmapMax = 1,
 }: TimeGridProps) {
   const [isDragging, setIsDragging] = useState(false)
-  const [dragStatus, setDragStatus] = useState<'available' | 'unavailable'>(
-    'available',
-  )
+  const [dragStatus, setDragStatus] = useState<
+    'available' | 'unavailable' | undefined
+  >('available')
 
   // 날짜 범위에서 각 날짜 생성
   const days: string[] = []
@@ -105,10 +105,14 @@ export function TimeGrid({
   const handleMouseDown = (day: string, time: string) => {
     if (readOnly) return
     const current = getCellStatus(day, time)
-    const newStatus = current === 'available' ? 'unavailable' : 'available'
-    setDragStatus(newStatus as 'available' | 'unavailable')
+    // 3단계 토글: 미입력 → 가능 → 불가능 → 미입력
+    const nextStatus: 'available' | 'unavailable' | undefined =
+      current === undefined ? 'available'
+      : current === 'available' ? 'unavailable'
+      : undefined
+    setDragStatus(nextStatus ?? 'available')
     setIsDragging(true)
-    toggleCell(day, time, newStatus as 'available' | 'unavailable')
+    toggleCell(day, time, nextStatus)
   }
 
   const handleMouseEnter = (day: string, time: string) => {
