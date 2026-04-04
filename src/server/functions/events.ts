@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { env } from 'cloudflare:workers'
 import { eq, and } from 'drizzle-orm'
 import { getDb } from '../../db'
-import { events } from '../../db/schema'
+import { events, participants, availabilitySlots } from '../../db/schema'
 import { generateEventId, generateAdminToken } from '../../lib/tokens'
 import { nowUTC } from '../../lib/time'
 
@@ -49,7 +49,7 @@ export const getEvent = createServerFn({ method: 'GET' })
     if (!event) throw new Error('Event not found')
 
     const eventParticipants = await db.query.participants.findMany({
-      where: eq(events.id, data.eventId),
+      where: eq(participants.eventId, data.eventId),
     })
 
     return {
@@ -74,7 +74,7 @@ export const getEventByAdminToken = createServerFn({ method: 'GET' })
     if (!event) throw new Error('Event not found')
 
     const eventParticipants = await db.query.participants.findMany({
-      where: eq(events.id, event.id),
+      where: eq(participants.eventId, event.id),
     })
 
     return {
@@ -109,10 +109,10 @@ export const confirmEvent = createServerFn({ method: 'POST' })
     // 최적 시간 계산
     const { findOptimalTime } = await import('../../lib/optimal-time')
     const allSlots = await db.query.availabilitySlots.findMany({
-      where: eq(events.id, data.eventId),
+      where: eq(availabilitySlots.eventId, data.eventId),
     })
     const allParticipants = await db.query.participants.findMany({
-      where: eq(events.id, data.eventId),
+      where: eq(participants.eventId, data.eventId),
     })
 
     const optimal = findOptimalTime(
