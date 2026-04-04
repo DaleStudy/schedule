@@ -7,7 +7,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Meeting Scheduler' },
+      { title: '달레 스케줄' },
     ],
     links: [{ rel: 'stylesheet', href: appCss }],
   }),
@@ -24,7 +24,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <header className="border-b bg-white">
           <div className="mx-auto max-w-4xl px-4 py-4">
             <a href="/" className="text-xl font-bold text-blue-600">
-              Meeting Scheduler
+              달레 스케줄
             </a>
           </div>
         </header>
