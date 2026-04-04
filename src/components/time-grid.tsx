@@ -18,8 +18,8 @@ interface TimeGridProps {
   heatmapMax?: number
 }
 
-const HOURS_START = 9
-const HOURS_END = 22
+const HOURS_START = 6
+const HOURS_END = 24
 const SLOT_MINUTES = 30
 
 export function TimeGrid({
@@ -127,9 +127,12 @@ export function TimeGrid({
       onMouseLeave={handleMouseUp}
     >
       <table className="w-full table-fixed border-collapse text-xs">
+        <colgroup>
+          <col style={{ width: '3rem' }} />
+        </colgroup>
         <thead>
           <tr>
-            <th className="sticky left-0 z-10 bg-white px-2 py-1" />
+            <th className="bg-white px-2 py-1" />
             {days.map((day) => (
               <th
                 key={day}
@@ -146,7 +149,7 @@ export function TimeGrid({
         <tbody>
           {timeLabels.map((time) => (
             <tr key={time}>
-              <td className="sticky left-0 z-10 bg-white px-2 py-0 text-right text-gray-500">
+              <td className="bg-white px-2 py-0 text-right text-gray-500">
                 {time.endsWith(':00') ? time : ''}
               </td>
               {days.map((day) => {
