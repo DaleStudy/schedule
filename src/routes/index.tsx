@@ -129,7 +129,7 @@ function CreateEventPage() {
           required
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="예: 4월 팀 회의"
+          placeholder="예: 커피챗"
           className="input"
         />
       </Field>
