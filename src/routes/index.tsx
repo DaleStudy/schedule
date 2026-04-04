@@ -11,9 +11,8 @@ function CreateEventPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [durationMinutes, setDurationMinutes] = useState(60)
-  const [eventDateStart, setEventDateStart] = useState('')
-  const [eventDateEnd, setEventDateEnd] = useState('')
-  const [responseDeadline, setResponseDeadline] = useState('')
+  const [eventWeeks, setEventWeeks] = useState(2)
+  const [deadlineDaysBefore, setDeadlineDaysBefore] = useState(7)
   const [participantNames, setParticipantNames] = useState([''])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<{
@@ -39,15 +38,25 @@ function CreateEventPage() {
 
     try {
       const names = participantNames.filter((n) => n.trim())
+      const now = new Date()
+      const eventDateStart = new Date(now)
+      eventDateStart.setDate(now.getDate() + 1)
+      const eventDateEnd = new Date(now)
+      eventDateEnd.setDate(now.getDate() + eventWeeks * 7)
+      const responseDeadlineAt = new Date(eventDateStart)
+      responseDeadlineAt.setDate(eventDateStart.getDate() - deadlineDaysBefore)
+      if (responseDeadlineAt <= now) {
+        responseDeadlineAt.setTime(now.getTime() + 24 * 60 * 60 * 1000)
+      }
       const res = await createEvent({
         data: {
           title,
           description: description || undefined,
           durationMinutes,
           timezone,
-          eventDateStart: new Date(eventDateStart).toISOString(),
-          eventDateEnd: new Date(eventDateEnd).toISOString(),
-          responseDeadlineAt: new Date(responseDeadline).toISOString(),
+          eventDateStart: eventDateStart.toISOString(),
+          eventDateEnd: eventDateEnd.toISOString(),
+          responseDeadlineAt: responseDeadlineAt.toISOString(),
           participantNames: names,
         },
       })
@@ -150,39 +159,34 @@ function CreateEventPage() {
       </Field>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field label="모임 가능 시작일">
-          <input
-            type="date"
-            required
-            value={eventDateStart}
-            onChange={(e) => setEventDateStart(e.target.value)}
+        <Field label="모임 가능 기간">
+          <select
+            value={eventWeeks}
+            onChange={(e) => setEventWeeks(Number(e.target.value))}
             className="input"
-          />
+          >
+            <option value={1}>1주 내</option>
+            <option value={2}>2주 내</option>
+            <option value={3}>3주 내</option>
+            <option value={4}>4주 내</option>
+          </select>
         </Field>
-        <Field label="모임 가능 종료일">
-          <input
-            type="date"
-            required
-            value={eventDateEnd}
-            onChange={(e) => setEventDateEnd(e.target.value)}
+        <Field label="응답 마감">
+          <select
+            value={deadlineDaysBefore}
+            onChange={(e) => setDeadlineDaysBefore(Number(e.target.value))}
             className="input"
-          />
+          >
+            <option value={3}>3일 전 확정</option>
+            <option value={5}>5일 전 확정</option>
+            <option value={7}>1주 전 확정</option>
+            <option value={14}>2주 전 확정</option>
+          </select>
+          <p className="mt-1 text-xs text-gray-500">
+            모임 시작일 기준으로 이 기간 전에 자동 확정됩니다.
+          </p>
         </Field>
       </div>
-
-      <Field label="응답 마감일">
-        <input
-          type="date"
-          required
-          value={responseDeadline}
-          onChange={(e) => setResponseDeadline(e.target.value)}
-          className="input"
-        />
-        <p className="mt-1 text-xs text-gray-500">
-          이 날짜에 자동으로 최적 시간이 확정됩니다. 모임 시작일보다 충분히
-          앞서야 합니다.
-        </p>
-      </Field>
 
       <div>
         <label className="mb-2 block text-sm font-medium text-gray-700">
