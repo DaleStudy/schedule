@@ -27,7 +27,6 @@ function AdminDashboard() {
   const [isConfirming, setIsConfirming] = useState(false)
 
   const respondedCount = event.participants.filter((p) => p.respondedAt).length
-  const totalCount = event.participants.length
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
   const handleConfirm = async () => {
@@ -97,7 +96,7 @@ function AdminDashboard() {
         </>
       )}
 
-      {totalCount > 0 && (
+      {respondedCount > 0 && (
         <div>
           <h3 className="mb-2 text-sm font-medium text-gray-700">참여자</h3>
           <div className="divide-y rounded-lg border">

@@ -178,7 +178,6 @@ function RespondPage() {
             })}
           </p>
         </div>
-        <ParticipantList participants={event.participants} />
       </div>
     )
   }
@@ -247,8 +246,7 @@ function RespondPage() {
         </div>
 
         {event.participants.length > 0 && (
-          <ParticipantList participants={event.participants} />
-        )}
+          )}
 
         <div className="space-y-4">
           <Field label="이메일">
@@ -381,32 +379,3 @@ function Field({
   )
 }
 
-function ParticipantList({
-  participants,
-}: {
-  participants: Array<{ name: string; respondedAt: string | null }>
-}) {
-  return (
-    <div>
-      <h3 className="mb-2 text-sm font-medium text-gray-700">
-        응답 현황 ({participants.filter((p) => p.respondedAt).length}/
-        {participants.length}명)
-      </h3>
-      <div className="divide-y rounded-lg border">
-        {participants.map((p) => (
-          <div
-            key={p.name}
-            className="flex items-center justify-between px-4 py-2"
-          >
-            <span className="text-sm font-medium">{p.name}</span>
-            <span
-              className={`text-xs ${p.respondedAt ? 'text-green-600' : 'text-gray-400'}`}
-            >
-              {p.respondedAt ? '응답 완료' : '대기 중'}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
