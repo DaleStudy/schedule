@@ -17,14 +17,10 @@ export interface OptimalResult {
 const SLOT_MINUTES = 30
 
 /**
- * 모든 응답자의 가용 슬롯을 분석하여 가장 많은 사람이 참여 가능한 시간대를 찾는다.
+ * 가장 많은 사람이 참여 가능한 시간대를 찾는다.
  *
- * 알고리즘:
- * 1. 각 available 슬롯을 30분 셀로 이산화
- * 2. 셀별 참여 가능 인원 Set 구성
- * 3. 회의 길이만큼의 연속 셀 윈도우를 슬라이딩하며
- *    교집합(모든 셀에 참여 가능한 사람)의 크기를 계산
- * 4. 교집합이 가장 큰 윈도우 선택 (동점 시 가장 이른 시간)
+ * 1차: 모든 셀에 참여 가능한 사람의 교집합이 가장 큰 윈도우
+ * 2차: 교집합이 없으면, 셀별 최소 참여자가 가장 큰 윈도우 (부분 매칭)
  */
 export function findOptimalTime(
   slots: AvailabilitySlot[],
@@ -65,13 +61,15 @@ export function findOptimalTime(
   let cursor = rangeStart
   while (!cursor.add(durationMinutes, 'minute').isAfter(rangeEnd)) {
     let windowParticipants: Set<string> | null = null
+    let hasEmptyCell = false
 
     for (let i = 0; i < requiredCells; i++) {
       const cellKey = cursor.add(i * SLOT_MINUTES, 'minute').toISOString()
       const cellParticipants = cellMap.get(cellKey)
 
       if (!cellParticipants || cellParticipants.size === 0) {
-        windowParticipants = null
+        hasEmptyCell = true
+        windowParticipants = new Set()
         break
       }
 
@@ -84,8 +82,6 @@ export function findOptimalTime(
           }
         }
       }
-
-      if (windowParticipants.size === 0) break
     }
 
     const count = windowParticipants?.size ?? 0
@@ -97,12 +93,49 @@ export function findOptimalTime(
     cursor = cursor.add(SLOT_MINUTES, 'minute')
   }
 
-  if (!bestStart || bestCount === 0) return null
-
-  return {
-    start: bestStart,
-    end: dayjs.utc(bestStart).add(durationMinutes, 'minute').toISOString(),
-    availableCount: bestCount,
-    totalParticipants,
+  // 완전한 교집합을 찾은 경우
+  if (bestStart && bestCount > 0) {
+    return {
+      start: bestStart,
+      end: dayjs.utc(bestStart).add(durationMinutes, 'minute').toISOString(),
+      availableCount: bestCount,
+      totalParticipants,
+    }
   }
+
+  // 2차: 교집합이 없으면, 셀별 최소 참여자 수가 가장 높은 윈도우 선택
+  let fallbackStart: string | null = null
+  let fallbackMinCount = 0
+
+  cursor = rangeStart
+  while (!cursor.add(durationMinutes, 'minute').isAfter(rangeEnd)) {
+    let minInWindow = Infinity
+
+    for (let i = 0; i < requiredCells; i++) {
+      const cellKey = cursor.add(i * SLOT_MINUTES, 'minute').toISOString()
+      const cellParticipants = cellMap.get(cellKey)
+      minInWindow = Math.min(minInWindow, cellParticipants?.size ?? 0)
+    }
+
+    if (minInWindow > fallbackMinCount) {
+      fallbackMinCount = minInWindow
+      fallbackStart = cursor.toISOString()
+    }
+
+    cursor = cursor.add(SLOT_MINUTES, 'minute')
+  }
+
+  if (fallbackStart && fallbackMinCount > 0) {
+    return {
+      start: fallbackStart,
+      end: dayjs
+        .utc(fallbackStart)
+        .add(durationMinutes, 'minute')
+        .toISOString(),
+      availableCount: fallbackMinCount,
+      totalParticipants,
+    }
+  }
+
+  return null
 }

@@ -50,7 +50,7 @@ export async function checkDeadlines(d1: D1Database) {
         })
         .where(eq(events.id, event.id))
     } else {
-      // 응답이 없거나 겹치는 시간이 없는 경우에도 확정 처리
+      // 응답이 하나도 없는 경우에만 취소
       await db
         .update(events)
         .set({

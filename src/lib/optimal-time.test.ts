@@ -57,4 +57,18 @@ describe('findOptimalTime', () => {
     expect(result).not.toBeNull()
     expect(result!.availableCount).toBe(1)
   })
+
+  it('공통 시간이 없어도 가장 많은 참여자가 가능한 시간을 선택 (부분 매칭)', () => {
+    const slots = [
+      // A: 4/14 05:00-06:00 (1시간)
+      { participantId: 'a', startAt: '2026-04-14T05:00:00Z', endAt: '2026-04-14T06:00:00Z', status: 'available' as const },
+      // B: 4/14 05:30-06:30 (1시간, A와 30분만 겹침 → 90분 회의에 공통 교집합 없음)
+      { participantId: 'b', startAt: '2026-04-14T05:30:00Z', endAt: '2026-04-14T06:30:00Z', status: 'available' as const },
+    ]
+
+    // 90분 회의: 두 사람이 동시에 90분을 맞출 수 없음 → 부분 매칭으로 최선 선택
+    const result = findOptimalTime(slots, 90, eventStart, eventEnd, 2)
+    expect(result).not.toBeNull()
+    expect(result!.availableCount).toBeGreaterThanOrEqual(1)
+  })
 })
