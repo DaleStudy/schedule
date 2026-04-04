@@ -1,9 +1,17 @@
 import { createServerFn } from '@tanstack/react-start'
 import { env } from 'cloudflare:workers'
+import { dayjs } from '../../lib/time'
 
 export interface ParsedSlot {
   start: string
   end: string
+  status: 'available' | 'unavailable'
+}
+
+interface LocalSlot {
+  date: string
+  startTime: string
+  endTime: string
   status: 'available' | 'unavailable'
 }
 
@@ -19,6 +27,16 @@ export const parseAvailabilityText = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const today = new Date().toISOString().split('T')[0]
 
+    // 이벤트 날짜 범위의 각 날짜와 요일을 계산해서 AI에 제공
+    const dates: string[] = []
+    let cursor = dayjs.utc(data.eventDateStart).tz(data.participantTimezone)
+    const end = dayjs.utc(data.eventDateEnd).tz(data.participantTimezone)
+    while (!cursor.isAfter(end)) {
+      const dow = ['일', '월', '화', '수', '목', '금', '토'][cursor.day()]
+      dates.push(`${cursor.format('YYYY-MM-DD')}(${dow})`)
+      cursor = cursor.add(1, 'day')
+    }
+
     const response = (await env.AI.run(
       '@cf/meta/llama-3.1-8b-instruct-fast',
       {
@@ -26,15 +44,21 @@ export const parseAvailabilityText = createServerFn({ method: 'POST' })
         messages: [
           {
             role: 'system',
-            content: `You parse natural language availability into JSON. Output ONLY a JSON array, nothing else.
+            content: `You extract availability from Korean text into JSON. Output ONLY a JSON array.
 
-Format: [{"start":"ISO8601_UTC","end":"ISO8601_UTC","status":"available"}]
+Format: [{"date":"YYYY-MM-DD","startTime":"HH:mm","endTime":"HH:mm","status":"available"|"unavailable"}]
 
-Context: today=${today}, range=${data.eventDateStart} to ${data.eventDateEnd}, timezone=${data.participantTimezone}
+Available dates: ${dates.join(', ')}
+Today: ${today}
 
-Time defaults (local): 오전=09:00-12:00, 오후=13:00-18:00, 저녁=18:00-22:00, 하루종일=09:00-22:00
-Convert to UTC. "available" unless explicitly unavailable (안돼/불가능/못).
-Output ONLY the JSON array. No explanation.`,
+Rules:
+- Output LOCAL times, NOT UTC
+- 오전=09:00-12:00, 오후=13:00-18:00, 저녁=18:00-22:00, 하루종일=09:00-22:00
+- 주말=Saturday+Sunday, 평일=Monday-Friday
+- "안됨/불가/못" → status:"unavailable"
+- For unavailable days, use startTime:"09:00", endTime:"22:00"
+- Include BOTH available AND unavailable slots
+- Output ONLY the JSON array`,
           },
           {
             role: 'user',
@@ -46,20 +70,34 @@ Output ONLY the JSON array. No explanation.`,
 
     const content = response.response ?? ''
 
-    // JSON 배열 추출: 첫 번째 [ 부터 마지막 ] 까지
     const startIdx = content.indexOf('[')
     const endIdx = content.lastIndexOf(']')
     if (startIdx === -1 || endIdx === -1) {
-      throw new Error('AI 응답에서 JSON을 찾을 수 없습니다. 다시 시도해주세요.')
+      throw new Error(
+        'AI 응답에서 JSON을 찾을 수 없습니다. 다시 시도해주세요.',
+      )
     }
 
     const jsonStr = content.slice(startIdx, endIdx + 1)
-
+    let localSlots: LocalSlot[]
     try {
-      return JSON.parse(jsonStr) as ParsedSlot[]
+      localSlots = JSON.parse(jsonStr)
     } catch {
       throw new Error(
         '시간 분석 결과를 파싱할 수 없습니다. 다시 시도해주세요.',
       )
     }
+
+    // 현지 시간 → UTC 변환
+    return localSlots.map((slot) => ({
+      start: dayjs
+        .tz(`${slot.date} ${slot.startTime}`, data.participantTimezone)
+        .utc()
+        .toISOString(),
+      end: dayjs
+        .tz(`${slot.date} ${slot.endTime}`, data.participantTimezone)
+        .utc()
+        .toISOString(),
+      status: slot.status,
+    })) as ParsedSlot[]
   })
