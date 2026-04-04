@@ -29,6 +29,7 @@ function createTestDb() {
     CREATE TABLE participants (
       id TEXT PRIMARY KEY NOT NULL,
       event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      email TEXT NOT NULL,
       name TEXT NOT NULL,
       timezone TEXT,
       responded_at TEXT,
@@ -67,10 +68,12 @@ function seedParticipant(
   id: string,
   eventId: string,
   name: string,
+  email: string = `${name}@test.com`,
 ) {
   db.insert(participants).values({
     id,
     eventId,
+    email,
     name,
     timezone: 'Asia/Seoul',
     respondedAt: new Date().toISOString(),

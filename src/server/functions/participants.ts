@@ -6,10 +6,44 @@ import { events, participants, availabilitySlots } from '../../db/schema'
 import { generateEventId, generateSlotId } from '../../lib/tokens'
 import { nowUTC } from '../../lib/time'
 
+export const getParticipantSlots = createServerFn({ method: 'POST' })
+  .inputValidator(
+    (input: { eventId: string; email: string }) => input,
+  )
+  .handler(async ({ data }) => {
+    const db = getDb(env.DB)
+
+    const participant = await db.query.participants.findFirst({
+      where: and(
+        eq(participants.eventId, data.eventId),
+        eq(participants.email, data.email),
+      ),
+    })
+
+    if (!participant) return { participant: null, slots: [] }
+
+    const slots = await db.query.availabilitySlots.findMany({
+      where: eq(availabilitySlots.participantId, participant.id),
+    })
+
+    return {
+      participant: {
+        name: participant.name,
+        timezone: participant.timezone,
+      },
+      slots: slots.map((s) => ({
+        startAt: s.startAt,
+        endAt: s.endAt,
+        status: s.status,
+      })),
+    }
+  })
+
 export const submitAvailability = createServerFn({ method: 'POST' })
   .inputValidator(
     (input: {
       eventId: string
+      email: string
       name: string
       timezone: string
       slots: Array<{
@@ -29,30 +63,32 @@ export const submitAvailability = createServerFn({ method: 'POST' })
     if (event.status !== 'pending')
       throw new Error('Event is no longer accepting responses')
 
-    // 같은 이름의 기존 참여자 조회 (재응답 지원)
+    // 이메일로 기존 참여자 조회 (재응답 지원)
     let participant = await db.query.participants.findFirst({
       where: and(
         eq(participants.eventId, data.eventId),
-        eq(participants.name, data.name),
+        eq(participants.email, data.email),
       ),
     })
 
     if (participant) {
-      // 기존 슬롯 삭제
       await db
         .delete(availabilitySlots)
         .where(eq(availabilitySlots.participantId, participant.id))
-      // 참여자 정보 업데이트
       await db
         .update(participants)
-        .set({ timezone: data.timezone, respondedAt: nowUTC() })
+        .set({
+          name: data.name,
+          timezone: data.timezone,
+          respondedAt: nowUTC(),
+        })
         .where(eq(participants.id, participant.id))
     } else {
-      // 새 참여자 생성
       const participantId = generateEventId()
       await db.insert(participants).values({
         id: participantId,
         eventId: data.eventId,
+        email: data.email,
         name: data.name,
         timezone: data.timezone,
         respondedAt: nowUTC(),

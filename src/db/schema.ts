@@ -42,6 +42,7 @@ export const participants = sqliteTable(
     eventId: text('event_id')
       .notNull()
       .references(() => events.id, { onDelete: 'cascade' }),
+    email: text('email').notNull(),
     name: text('name').notNull(),
     timezone: text('timezone'),
     respondedAt: text('responded_at'),
@@ -51,7 +52,7 @@ export const participants = sqliteTable(
   },
   (table) => [
     index('idx_participants_event').on(table.eventId),
-    index('idx_participants_event_name').on(table.eventId, table.name),
+    index('idx_participants_event_email').on(table.eventId, table.email),
   ],
 )
 
