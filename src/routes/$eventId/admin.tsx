@@ -118,6 +118,15 @@ function AdminDashboard() {
         </div>
       )}
 
+      {event.status === 'pending' && (
+        <a
+          href={`/${event.id}`}
+          className="block w-full rounded border border-blue-200 bg-blue-50 px-4 py-3 text-center text-sm font-medium text-blue-700 hover:bg-blue-100"
+        >
+          내 응답 입력하기
+        </a>
+      )}
+
       <div className="space-y-3">
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
