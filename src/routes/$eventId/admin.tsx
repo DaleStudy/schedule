@@ -79,7 +79,7 @@ function AdminDashboard() {
               </span>
             </div>
             <p className="text-xs text-blue-600">
-              응답 마감:{' '}
+              마감일:{' '}
               {new Date(event.responseDeadlineAt).toLocaleDateString('ko-KR')}
             </p>
           </div>
@@ -197,7 +197,7 @@ function EventInfoSection({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-500">모임 시간</label>
+          <label className="mb-1 block text-xs text-gray-500">소요 시간</label>
           <select
             value={durationMinutes}
             onChange={(e) => setDurationMinutes(Number(e.target.value))}
@@ -248,14 +248,14 @@ function EventInfoSection({
       </div>
       <dl className="space-y-1 text-sm">
         <div className="flex justify-between">
-          <dt className="text-gray-500">모임 가능 기간</dt>
+          <dt className="text-gray-500">후보 날짜</dt>
           <dd>
             {new Date(event.eventDateStart).toLocaleDateString('ko-KR')} ~{' '}
             {new Date(event.eventDateEnd).toLocaleDateString('ko-KR')}
           </dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-gray-500">모임 시간</dt>
+          <dt className="text-gray-500">소요 시간</dt>
           <dd>{event.durationMinutes}분</dd>
         </div>
         <div className="flex justify-between">

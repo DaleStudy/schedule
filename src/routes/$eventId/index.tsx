@@ -234,13 +234,13 @@ function RespondPage() {
 
         <div className="rounded-lg border bg-gray-50 p-4 text-sm text-gray-600">
           <p>
-            모임 가능 기간:{' '}
+            후보 날짜:{' '}
             {new Date(event.eventDateStart).toLocaleDateString('ko-KR')} ~{' '}
             {new Date(event.eventDateEnd).toLocaleDateString('ko-KR')}
           </p>
-          <p>모임 시간: {event.durationMinutes}분</p>
+          <p>소요 시간: {event.durationMinutes}분</p>
           <p>
-            응답 마감:{' '}
+            마감일:{' '}
             {new Date(event.responseDeadlineAt).toLocaleDateString('ko-KR')}
           </p>
         </div>
