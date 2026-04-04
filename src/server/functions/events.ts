@@ -52,6 +52,15 @@ export const getEvent = createServerFn({ method: 'GET' })
       where: eq(participants.eventId, data.eventId),
     })
 
+    const allSlots = await db.query.availabilitySlots.findMany({
+      where: eq(availabilitySlots.eventId, data.eventId),
+    })
+
+    // 슬롯에 참여자 이름 매핑
+    const participantMap = new Map(
+      eventParticipants.map((p) => [p.id, p.name]),
+    )
+
     return {
       ...event,
       participants: eventParticipants.map((p) => ({
@@ -59,6 +68,12 @@ export const getEvent = createServerFn({ method: 'GET' })
         name: p.name,
         respondedAt: p.respondedAt,
         timezone: p.timezone,
+      })),
+      slots: allSlots.map((s) => ({
+        participantName: participantMap.get(s.participantId) ?? '',
+        startAt: s.startAt,
+        endAt: s.endAt,
+        status: s.status,
       })),
     }
   })

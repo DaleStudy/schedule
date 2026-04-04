@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { dayjs } from '../../lib/time'
 import { getEvent } from '../../server/functions/events'
 import { submitAvailability } from '../../server/functions/participants'
 import { saveLocalEvent } from '../../lib/local-events'
@@ -27,7 +28,28 @@ function RespondPage() {
   const [isParsing, setIsParsing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [activeTab, setActiveTab] = useState<'nl' | 'grid'>('nl')
+
+  // 기존 응답자들의 가용시간 히트맵 생성
+  const heatmap = useMemo(() => {
+    if (!event.slots || event.slots.length === 0) return undefined
+    const map = new Map<string, number>()
+    const SLOT_MIN = 30
+    for (const slot of event.slots) {
+      if (slot.status !== 'available') continue
+      let cursor = dayjs.utc(slot.startAt).tz(timezone)
+      const end = dayjs.utc(slot.endAt).tz(timezone)
+      while (cursor.isBefore(end)) {
+        const key = `${cursor.format('YYYY-MM-DD')} ${cursor.format('H:mm')}`
+        map.set(key, (map.get(key) ?? 0) + 1)
+        cursor = cursor.add(SLOT_MIN, 'minute')
+      }
+    }
+    return map
+  }, [event.slots, timezone])
+
+  const heatmapMax = heatmap
+    ? Math.max(...heatmap.values(), 1)
+    : 1
 
   const [slots, setSlots] = useState<
     Array<{ start: string; end: string; status: 'available' | 'unavailable' }>
@@ -197,62 +219,40 @@ function RespondPage() {
         <TimezoneSelector value={timezone} onChange={setTimezone} />
       </div>
 
-      <div className="flex border-b">
-        <button
-          onClick={() => setActiveTab('nl')}
-          className={`px-4 py-2 text-sm font-medium ${
-            activeTab === 'nl'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          자연어로 입력
-        </button>
-        <button
-          onClick={() => setActiveTab('grid')}
-          className={`px-4 py-2 text-sm font-medium ${
-            activeTab === 'grid'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          캘린더에서 선택
-        </button>
-      </div>
-
-      {activeTab === 'nl' && (
-        <div className="space-y-3">
+      <div className="space-y-3">
+        <div className="flex gap-2">
           <textarea
             value={nlText}
             onChange={(e) => setNlText(e.target.value)}
-            placeholder={`예시:\n- 다음주 화목 오후 2시~6시 가능해요\n- 수요일은 하루종일 안돼요`}
-            rows={4}
-            className="input"
+            placeholder="예: 화목 오후 2-6시 가능, 주말은 안 됨"
+            rows={2}
+            className="input flex-1"
           />
           <button
             onClick={handleParse}
             disabled={isParsing || !nlText.trim()}
-            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="shrink-0 self-end rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {isParsing ? '분석 중...' : '시간 분석하기'}
+            {isParsing ? '분석 중...' : '분석'}
           </button>
         </div>
-      )}
+      </div>
 
-      {activeTab === 'grid' && (
-        <div>
-          <p className="mb-2 text-xs text-gray-500">
-            셀을 클릭/드래그하여 가능한 시간을 선택하세요.
-          </p>
-          <TimeGrid
-            eventDateStart={event.eventDateStart}
-            eventDateEnd={event.eventDateEnd}
-            timezone={timezone}
-            slots={slots}
-            onSlotsChange={setSlots}
-          />
-        </div>
-      )}
+      <div>
+        <p className="mb-2 text-xs text-gray-500">
+          셀을 클릭/드래그하여 가능한 시간을 선택하세요.
+          {heatmap && heatmap.size > 0 && ' 파란색은 다른 참여자가 가능한 시간입니다.'}
+        </p>
+        <TimeGrid
+          eventDateStart={event.eventDateStart}
+          eventDateEnd={event.eventDateEnd}
+          timezone={timezone}
+          slots={slots}
+          onSlotsChange={setSlots}
+          heatmap={heatmap}
+          heatmapMax={heatmapMax}
+        />
+      </div>
 
       {slots.length > 0 && (
         <div className="rounded-lg border bg-gray-50 p-4">
@@ -260,14 +260,6 @@ function RespondPage() {
             {slots.filter((s) => s.status === 'available').length}개 가능,{' '}
             {slots.filter((s) => s.status === 'unavailable').length}개 불가능
           </p>
-          {activeTab === 'nl' && (
-            <button
-              onClick={() => setActiveTab('grid')}
-              className="mt-1 text-xs text-blue-600 hover:underline"
-            >
-              캘린더에서 확인/수정하기
-            </button>
-          )}
         </div>
       )}
 

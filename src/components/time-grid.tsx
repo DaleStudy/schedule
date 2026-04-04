@@ -14,6 +14,8 @@ interface TimeGridProps {
   slots: TimeSlot[]
   onSlotsChange: (slots: TimeSlot[]) => void
   readOnly?: boolean
+  heatmap?: Map<string, number>
+  heatmapMax?: number
 }
 
 const HOURS_START = 9
@@ -27,6 +29,8 @@ export function TimeGrid({
   slots,
   onSlotsChange,
   readOnly = false,
+  heatmap,
+  heatmapMax = 1,
 }: TimeGridProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragStatus, setDragStatus] = useState<'available' | 'unavailable'>(
@@ -145,6 +149,11 @@ export function TimeGrid({
               </td>
               {days.map((day) => {
                 const status = getCellStatus(day, time)
+                const heatCount = heatmap?.get(getCellKey(day, time)) ?? 0
+                const heatOpacity =
+                  heatmap && heatmapMax > 0 && !status
+                    ? Math.round((heatCount / heatmapMax) * 40 + 10)
+                    : 0
                 return (
                   <td
                     key={`${day}-${time}`}
@@ -153,9 +162,17 @@ export function TimeGrid({
                         ? 'bg-green-400 hover:bg-green-500'
                         : status === 'unavailable'
                           ? 'bg-red-300 hover:bg-red-400'
-                          : 'bg-gray-50 hover:bg-gray-100'
+                          : 'hover:bg-gray-100'
                     } ${time.endsWith(':00') ? 'border-t-gray-300' : 'border-t-gray-100'}`}
-                    style={{ width: 60, height: 20 }}
+                    style={{
+                      width: 60,
+                      height: 20,
+                      backgroundColor:
+                        !status && heatCount > 0
+                          ? `rgba(59, 130, 246, ${heatOpacity / 100})`
+                          : undefined,
+                    }}
+                    title={heatCount > 0 ? `${heatCount}명 가능` : undefined}
                     onMouseDown={() => handleMouseDown(day, time)}
                     onMouseEnter={() => handleMouseEnter(day, time)}
                   />
@@ -177,6 +194,15 @@ export function TimeGrid({
           <span className="inline-block h-3 w-3 rounded bg-gray-50 border" />{' '}
           미입력
         </span>
+        {heatmap && (
+          <span className="flex items-center gap-1">
+            <span
+              className="inline-block h-3 w-3 rounded"
+              style={{ backgroundColor: 'rgba(59, 130, 246, 0.35)' }}
+            />{' '}
+            다른 참여자
+          </span>
+        )}
       </div>
     </div>
   )
