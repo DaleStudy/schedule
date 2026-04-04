@@ -22,26 +22,19 @@ export const parseAvailabilityText = createServerFn({ method: 'POST' })
     const response = (await env.AI.run(
       '@cf/meta/llama-3.1-8b-instruct',
       {
+        max_tokens: 2048,
         messages: [
           {
             role: 'system',
-            content: `You are a date/time parser. Given natural language text about someone's availability, extract structured time slots.
+            content: `You parse natural language availability into JSON. Output ONLY a JSON array, nothing else.
 
-Context:
-- Today's date: ${today}
-- Event possible date range: ${data.eventDateStart} to ${data.eventDateEnd}
-- Participant's timezone: ${data.participantTimezone}
+Format: [{"start":"ISO8601_UTC","end":"ISO8601_UTC","status":"available"}]
 
-Rules:
-- Output ONLY a JSON array of objects with: { "start": "ISO8601_UTC", "end": "ISO8601_UTC", "status": "available" | "unavailable" }
-- Convert all times to UTC based on the participant's timezone
-- "오후 가능" without specific hours → 13:00-18:00 local
-- "오전" without specific hours → 09:00-12:00 local
-- "저녁" without specific hours → 18:00-22:00 local
-- "하루종일" → 09:00-22:00 local
-- Default to "available" unless explicitly unavailable (안돼, 불가능, 못 함 등)
-- Only include slots within the event date range
-- No explanation, no markdown, just the JSON array`,
+Context: today=${today}, range=${data.eventDateStart} to ${data.eventDateEnd}, timezone=${data.participantTimezone}
+
+Time defaults (local): 오전=09:00-12:00, 오후=13:00-18:00, 저녁=18:00-22:00, 하루종일=09:00-22:00
+Convert to UTC. "available" unless explicitly unavailable (안돼/불가능/못).
+Output ONLY the JSON array. No explanation.`,
           },
           {
             role: 'user',
@@ -53,9 +46,20 @@ Rules:
 
     const content = response.response ?? ''
 
-    const jsonStr = content
-      .replace(/```json?\n?/g, '')
-      .replace(/```/g, '')
-      .trim()
-    return JSON.parse(jsonStr) as ParsedSlot[]
+    // JSON 배열 추출: 첫 번째 [ 부터 마지막 ] 까지
+    const startIdx = content.indexOf('[')
+    const endIdx = content.lastIndexOf(']')
+    if (startIdx === -1 || endIdx === -1) {
+      throw new Error('AI 응답에서 JSON을 찾을 수 없습니다. 다시 시도해주세요.')
+    }
+
+    const jsonStr = content.slice(startIdx, endIdx + 1)
+
+    try {
+      return JSON.parse(jsonStr) as ParsedSlot[]
+    } catch {
+      throw new Error(
+        '시간 분석 결과를 파싱할 수 없습니다. 다시 시도해주세요.',
+      )
+    }
   })
