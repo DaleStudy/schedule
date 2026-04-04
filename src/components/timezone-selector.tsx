@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 interface TimezoneSelectorProps {
   value: string
   onChange: (tz: string) => void
@@ -17,21 +19,47 @@ const COMMON_TIMEZONES = [
   { value: 'Pacific/Auckland', label: '오클랜드 (NZST, UTC+12)' },
 ]
 
+function getLabel(value: string) {
+  return COMMON_TIMEZONES.find((tz) => tz.value === value)?.label ?? value
+}
+
 export function TimezoneSelector({ value, onChange }: TimezoneSelectorProps) {
+  const [editing, setEditing] = useState(false)
+
+  if (editing) {
+    return (
+      <select
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value)
+          setEditing(false)
+        }}
+        onBlur={() => setEditing(false)}
+        autoFocus
+        className="input"
+      >
+        {COMMON_TIMEZONES.map((tz) => (
+          <option key={tz.value} value={tz.value}>
+            {tz.label}
+          </option>
+        ))}
+        {!COMMON_TIMEZONES.find((tz) => tz.value === value) && (
+          <option value={value}>{value}</option>
+        )}
+      </select>
+    )
+  }
+
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="input"
-    >
-      {COMMON_TIMEZONES.map((tz) => (
-        <option key={tz.value} value={tz.value}>
-          {tz.label}
-        </option>
-      ))}
-      {!COMMON_TIMEZONES.find((tz) => tz.value === value) && (
-        <option value={value}>{value}</option>
-      )}
-    </select>
+    <span className="text-sm text-gray-600">
+      {getLabel(value)}{' '}
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="text-blue-600 hover:underline"
+      >
+        변경
+      </button>
+    </span>
   )
 }

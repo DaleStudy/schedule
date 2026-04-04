@@ -184,9 +184,10 @@ function RespondPage() {
         />
       </Field>
 
-      <Field label="타임존">
+      <div className="text-sm">
+        <span className="font-medium text-gray-700">시간대: </span>
         <TimezoneSelector value={timezone} onChange={setTimezone} />
-      </Field>
+      </div>
 
       <div className="flex border-b">
         <button
