@@ -60,9 +60,12 @@ export const submitAvailability = createServerFn({ method: 'POST' })
       participant = { id: participantId } as typeof participant
     }
 
-    if (data.slots.length > 0) {
+    // D1 바인딩 파라미터 제한(100개)을 피하기 위해 10개씩 배치 삽입
+    const BATCH_SIZE = 10
+    for (let i = 0; i < data.slots.length; i += BATCH_SIZE) {
+      const batch = data.slots.slice(i, i + BATCH_SIZE)
       await db.insert(availabilitySlots).values(
-        data.slots.map((slot) => ({
+        batch.map((slot) => ({
           id: generateSlotId(),
           participantId: participant!.id,
           eventId: data.eventId,
