@@ -342,8 +342,7 @@ function RespondPage() {
       {slots.length > 0 && (
         <div className="rounded-lg border bg-gray-50 p-4">
           <p className="text-sm text-gray-700">
-            {slots.filter((s) => s.status === 'available').length}개 가능,{' '}
-            {slots.filter((s) => s.status === 'unavailable').length}개 불가능
+            {slots.filter((s) => s.status === 'available').length}개 시간대 선택됨
           </p>
         </div>
       )}

@@ -105,11 +105,9 @@ export function TimeGrid({
   const handleMouseDown = (day: string, time: string) => {
     if (readOnly) return
     const current = getCellStatus(day, time)
-    // 3단계 토글: 미입력 → 가능 → 불가능 → 미입력
-    const nextStatus: 'available' | 'unavailable' | undefined =
-      current === undefined ? 'available'
-      : current === 'available' ? 'unavailable'
-      : undefined
+    // 2상태 토글: 미선택 → 가능 → 미선택
+    const nextStatus: 'available' | undefined =
+      current === 'available' ? undefined : 'available'
     setDragStatus(nextStatus ?? 'available')
     setIsDragging(true)
     toggleCell(day, time, nextStatus)
@@ -164,9 +162,7 @@ export function TimeGrid({
                     className={`cursor-pointer border p-0 ${
                       status === 'available'
                         ? 'bg-green-400 hover:bg-green-500'
-                        : status === 'unavailable'
-                          ? 'bg-red-300 hover:bg-red-400'
-                          : 'hover:bg-gray-100'
+                        : 'hover:bg-gray-100'
                     } ${time.endsWith(':00') ? 'border-t-gray-300' : 'border-t-gray-100'}`}
                     style={{
                       height: 20,
@@ -189,13 +185,6 @@ export function TimeGrid({
       <div className="mt-2 flex gap-4 text-xs text-gray-500">
         <span className="flex items-center gap-1">
           <span className="inline-block h-3 w-3 rounded bg-green-400" /> 가능
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded bg-red-300" /> 불가능
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded bg-gray-50 border" />{' '}
-          미입력
         </span>
         {heatmap && (
           <span className="flex items-center gap-1">
