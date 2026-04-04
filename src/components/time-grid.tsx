@@ -126,7 +126,7 @@ export function TimeGrid({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      <table className="w-full border-collapse text-xs">
+      <table className="w-full table-fixed border-collapse text-xs">
         <thead>
           <tr>
             <th className="sticky left-0 z-10 bg-white px-2 py-1" />
