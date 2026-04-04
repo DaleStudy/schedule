@@ -219,7 +219,7 @@ function RespondPage() {
         <TimezoneSelector value={timezone} onChange={setTimezone} />
       </div>
 
-      <div className="space-y-3">
+      <Field label="가능한 시간을 알려주세요">
         <div className="flex gap-2">
           <textarea
             value={nlText}
@@ -236,7 +236,10 @@ function RespondPage() {
             {isParsing ? '분석 중...' : '분석'}
           </button>
         </div>
-      </div>
+        <p className="mt-1 text-xs text-gray-400">
+          자연어로 입력하면 AI가 분석합니다. 또는 아래 캘린더에서 직접 선택하세요.
+        </p>
+      </Field>
 
       <div>
         <p className="mb-2 text-xs text-gray-500">
