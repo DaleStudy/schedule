@@ -245,9 +245,6 @@ function RespondPage() {
           </p>
         </div>
 
-        {event.participants.length > 0 && (
-          )}
-
         <div className="space-y-4">
           <Field label="이메일">
             <input
