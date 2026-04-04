@@ -79,7 +79,7 @@ function AdminDashboard() {
               </span>
             </div>
             <p className="text-xs text-blue-600">
-              마감일:{' '}
+              응답 마감:{' '}
               {new Date(event.responseDeadlineAt).toLocaleDateString('ko-KR')}
             </p>
           </div>

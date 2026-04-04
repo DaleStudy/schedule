@@ -240,7 +240,7 @@ function RespondPage() {
           </p>
           <p>소요 시간: {event.durationMinutes}분</p>
           <p>
-            마감일:{' '}
+            응답 마감:{' '}
             {new Date(event.responseDeadlineAt).toLocaleDateString('ko-KR')}
           </p>
         </div>
