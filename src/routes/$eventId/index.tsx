@@ -237,7 +237,7 @@ function RespondPage() {
           </button>
         </div>
         <p className="mt-1 text-xs text-gray-400">
-          자연어로 입력하면 AI가 분석합니다. 또는 아래 캘린더에서 직접 선택하세요.
+          실험 기능: AI 분석은 시간이 걸릴 수 있고 정확하지 않을 수 있습니다. 결과가 맞지 않으면 아래 캘린더에서 직접 조정하세요.
         </p>
       </Field>
 
