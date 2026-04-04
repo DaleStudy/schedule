@@ -173,13 +173,13 @@ function RespondPage() {
         <ParticipantList participants={event.participants} />
       )}
 
-      <Field label="이름">
+      <Field label="참여자 이름">
         <input
           type="text"
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="이름을 입력하세요"
+          placeholder="예: 달레"
           className="input"
         />
       </Field>
