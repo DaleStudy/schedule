@@ -53,14 +53,14 @@ export function TimeGrid({
     timeLabels.push(`${h}:30`)
   }
 
-  // 슬롯 상태 맵: "YYYY-MM-DD HH:mm" -> status
+  // 슬롯 상태 맵: "YYYY-MM-DD H:mm" -> status (H = 패딩 없음, timeLabels와 일치)
   const slotStatusMap = new Map<string, 'available' | 'unavailable'>()
   for (const slot of slots) {
     const start = dayjs.utc(slot.start).tz(timezone)
     const end = dayjs.utc(slot.end).tz(timezone)
     let c = start
     while (c.isBefore(end)) {
-      slotStatusMap.set(c.format('YYYY-MM-DD HH:mm'), slot.status)
+      slotStatusMap.set(c.format('YYYY-MM-DD H:mm'), slot.status)
       c = c.add(SLOT_MINUTES, 'minute')
     }
   }
