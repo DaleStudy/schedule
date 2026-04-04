@@ -1,0 +1,183 @@
+import { useState, useCallback } from 'react'
+import { dayjs } from '../lib/time'
+
+interface TimeSlot {
+  start: string
+  end: string
+  status: 'available' | 'unavailable'
+}
+
+interface TimeGridProps {
+  eventDateStart: string
+  eventDateEnd: string
+  timezone: string
+  slots: TimeSlot[]
+  onSlotsChange: (slots: TimeSlot[]) => void
+  readOnly?: boolean
+}
+
+const HOURS_START = 9
+const HOURS_END = 22
+const SLOT_MINUTES = 30
+
+export function TimeGrid({
+  eventDateStart,
+  eventDateEnd,
+  timezone,
+  slots,
+  onSlotsChange,
+  readOnly = false,
+}: TimeGridProps) {
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStatus, setDragStatus] = useState<'available' | 'unavailable'>(
+    'available',
+  )
+
+  // 날짜 범위에서 각 날짜 생성
+  const days: string[] = []
+  let cursor = dayjs.utc(eventDateStart).tz(timezone).startOf('day')
+  const end = dayjs.utc(eventDateEnd).tz(timezone).startOf('day')
+  while (!cursor.isAfter(end)) {
+    days.push(cursor.format('YYYY-MM-DD'))
+    cursor = cursor.add(1, 'day')
+  }
+
+  // 시간 슬롯 생성 (30분 단위)
+  const timeLabels: string[] = []
+  for (let h = HOURS_START; h < HOURS_END; h++) {
+    timeLabels.push(`${h}:00`)
+    timeLabels.push(`${h}:30`)
+  }
+
+  // 슬롯 상태 맵: "YYYY-MM-DD HH:mm" -> status
+  const slotStatusMap = new Map<string, 'available' | 'unavailable'>()
+  for (const slot of slots) {
+    const start = dayjs.utc(slot.start).tz(timezone)
+    const end = dayjs.utc(slot.end).tz(timezone)
+    let c = start
+    while (c.isBefore(end)) {
+      slotStatusMap.set(c.format('YYYY-MM-DD HH:mm'), slot.status)
+      c = c.add(SLOT_MINUTES, 'minute')
+    }
+  }
+
+  const getCellKey = (day: string, time: string) => `${day} ${time}`
+
+  const getCellStatus = (day: string, time: string) =>
+    slotStatusMap.get(getCellKey(day, time))
+
+  const toggleCell = useCallback(
+    (day: string, time: string, forceStatus?: 'available' | 'unavailable') => {
+      if (readOnly) return
+
+      const key = getCellKey(day, time)
+      const current = slotStatusMap.get(key)
+      const newStatus = forceStatus ?? (current === 'available' ? undefined : 'available')
+
+      // 기존 슬롯에서 이 셀에 해당하는 항목 제거
+      const cellStart = dayjs
+        .tz(`${day} ${time}`, 'YYYY-MM-DD H:mm', timezone)
+        .utc()
+        .toISOString()
+      const cellEnd = dayjs
+        .tz(`${day} ${time}`, 'YYYY-MM-DD H:mm', timezone)
+        .add(SLOT_MINUTES, 'minute')
+        .utc()
+        .toISOString()
+
+      const filtered = slots.filter(
+        (s) => !(s.start === cellStart && s.end === cellEnd),
+      )
+
+      if (newStatus) {
+        filtered.push({ start: cellStart, end: cellEnd, status: newStatus })
+      }
+
+      onSlotsChange(filtered)
+    },
+    [slots, onSlotsChange, timezone, readOnly, slotStatusMap],
+  )
+
+  const handleMouseDown = (day: string, time: string) => {
+    if (readOnly) return
+    const current = getCellStatus(day, time)
+    const newStatus = current === 'available' ? 'unavailable' : 'available'
+    setDragStatus(newStatus as 'available' | 'unavailable')
+    setIsDragging(true)
+    toggleCell(day, time, newStatus as 'available' | 'unavailable')
+  }
+
+  const handleMouseEnter = (day: string, time: string) => {
+    if (!isDragging || readOnly) return
+    toggleCell(day, time, dragStatus)
+  }
+
+  const handleMouseUp = () => setIsDragging(false)
+
+  return (
+    <div
+      className="select-none overflow-x-auto"
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
+      <table className="border-collapse text-xs">
+        <thead>
+          <tr>
+            <th className="sticky left-0 z-10 bg-white px-2 py-1" />
+            {days.map((day) => (
+              <th
+                key={day}
+                className="min-w-[60px] border-b px-1 py-2 text-center font-medium"
+              >
+                <div>{dayjs(day).format('M/D')}</div>
+                <div className="text-gray-400">
+                  {dayjs(day).format('ddd')}
+                </div>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {timeLabels.map((time) => (
+            <tr key={time}>
+              <td className="sticky left-0 z-10 bg-white px-2 py-0 text-right text-gray-500">
+                {time.endsWith(':00') ? time : ''}
+              </td>
+              {days.map((day) => {
+                const status = getCellStatus(day, time)
+                return (
+                  <td
+                    key={`${day}-${time}`}
+                    className={`cursor-pointer border p-0 ${
+                      status === 'available'
+                        ? 'bg-green-400 hover:bg-green-500'
+                        : status === 'unavailable'
+                          ? 'bg-red-300 hover:bg-red-400'
+                          : 'bg-gray-50 hover:bg-gray-100'
+                    } ${time.endsWith(':00') ? 'border-t-gray-300' : 'border-t-gray-100'}`}
+                    style={{ width: 60, height: 20 }}
+                    onMouseDown={() => handleMouseDown(day, time)}
+                    onMouseEnter={() => handleMouseEnter(day, time)}
+                  />
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="mt-2 flex gap-4 text-xs text-gray-500">
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-3 w-3 rounded bg-green-400" /> 가능
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-3 w-3 rounded bg-red-300" /> 불가능
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-3 w-3 rounded bg-gray-50 border" />{' '}
+          미입력
+        </span>
+      </div>
+    </div>
+  )
+}

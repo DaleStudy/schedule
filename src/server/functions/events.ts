@@ -1,0 +1,146 @@
+import { createServerFn } from '@tanstack/react-start'
+import { env } from 'cloudflare:workers'
+import { eq, and } from 'drizzle-orm'
+import { getDb } from '../../db'
+import { events, participants } from '../../db/schema'
+import {
+  generateEventId,
+  generateAdminToken,
+  generateParticipantToken,
+} from '../../lib/tokens'
+import { nowUTC } from '../../lib/time'
+
+export const createEvent = createServerFn({ method: 'POST' })
+  .inputValidator(
+    (input: {
+      title: string
+      description?: string
+      durationMinutes: number
+      timezone: string
+      eventDateStart: string
+      eventDateEnd: string
+      responseDeadlineAt: string
+      participantNames: string[]
+    }) => input,
+  )
+  .handler(async ({ data }) => {
+    const db = getDb(env.DB)
+    const eventId = generateEventId()
+    const adminToken = generateAdminToken()
+
+    await db.insert(events).values({
+      id: eventId,
+      title: data.title,
+      description: data.description,
+      durationMinutes: data.durationMinutes,
+      adminToken,
+      timezone: data.timezone,
+      eventDateStart: data.eventDateStart,
+      eventDateEnd: data.eventDateEnd,
+      responseDeadlineAt: data.responseDeadlineAt,
+    })
+
+    const participantRecords = data.participantNames.map((name) => ({
+      id: generateEventId(),
+      eventId,
+      name,
+      token: generateParticipantToken(),
+    }))
+
+    if (participantRecords.length > 0) {
+      await db.insert(participants).values(participantRecords)
+    }
+
+    return {
+      eventId,
+      adminToken,
+      participants: participantRecords.map((p) => ({
+        name: p.name,
+        token: p.token,
+      })),
+    }
+  })
+
+export const getEvent = createServerFn({ method: 'GET' })
+  .inputValidator((input: { eventId: string }) => input)
+  .handler(async ({ data }) => {
+    const db = getDb(env.DB)
+
+    const event = await db.query.events.findFirst({
+      where: eq(events.id, data.eventId),
+    })
+    if (!event) throw new Error('Event not found')
+
+    const eventParticipants = await db.query.participants.findMany({
+      where: eq(participants.eventId, data.eventId),
+    })
+
+    return {
+      ...event,
+      participants: eventParticipants.map((p) => ({
+        id: p.id,
+        name: p.name,
+        respondedAt: p.respondedAt,
+        timezone: p.timezone,
+      })),
+    }
+  })
+
+export const getEventByAdminToken = createServerFn({ method: 'GET' })
+  .inputValidator((input: { adminToken: string }) => input)
+  .handler(async ({ data }) => {
+    const db = getDb(env.DB)
+
+    const event = await db.query.events.findFirst({
+      where: eq(events.adminToken, data.adminToken),
+    })
+    if (!event) throw new Error('Event not found')
+
+    const eventParticipants = await db.query.participants.findMany({
+      where: eq(participants.eventId, event.id),
+    })
+
+    return {
+      ...event,
+      participants: eventParticipants.map((p) => ({
+        id: p.id,
+        name: p.name,
+        token: p.token,
+        respondedAt: p.respondedAt,
+        timezone: p.timezone,
+      })),
+    }
+  })
+
+export const confirmEvent = createServerFn({ method: 'POST' })
+  .inputValidator(
+    (input: {
+      eventId: string
+      adminToken: string
+      confirmedStart: string
+      confirmedEnd: string
+    }) => input,
+  )
+  .handler(async ({ data }) => {
+    const db = getDb(env.DB)
+
+    const event = await db.query.events.findFirst({
+      where: and(
+        eq(events.id, data.eventId),
+        eq(events.adminToken, data.adminToken),
+      ),
+    })
+    if (!event) throw new Error('Event not found or unauthorized')
+
+    await db
+      .update(events)
+      .set({
+        status: 'confirmed',
+        confirmedStart: data.confirmedStart,
+        confirmedEnd: data.confirmedEnd,
+        updatedAt: nowUTC(),
+      })
+      .where(eq(events.id, data.eventId))
+
+    return { success: true }
+  })

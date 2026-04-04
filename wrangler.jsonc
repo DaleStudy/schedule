@@ -1,0 +1,25 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "scheduler",
+	"account_id": "94480614a6df7731f1e4491bdac5c440",
+	"compatibility_date": "2026-04-04",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": "@tanstack/react-start/server-entry",
+	"observability": { "enabled": true },
+	"upload_source_maps": true,
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "scheduler-db",
+			"database_id": "8e323c58-a435-44e9-b5ad-6e65fd2b9ef2",
+			"migrations_dir": "drizzle"
+		}
+	],
+	"ai": {
+		"binding": "AI"
+	},
+	"triggers": {
+		// 5분마다 응답 기한이 지난 이벤트를 자동 확정
+		"crons": ["*/5 * * * *"]
+	}
+}
