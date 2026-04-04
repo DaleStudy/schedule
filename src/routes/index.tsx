@@ -26,7 +26,7 @@ function HomePage() {
       </div>
 
       {localEvents.length > 0 ? (
-        <div className="divide-y rounded-lg border">
+        <div className="divide-y overflow-hidden rounded-lg border">
           {localEvents.map((e) => (
             <Link
               key={`${e.eventId}-${e.role}`}
