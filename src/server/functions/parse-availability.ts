@@ -27,7 +27,6 @@ export const parseAvailabilityText = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const today = new Date().toISOString().split('T')[0]
 
-    // 이벤트 날짜 범위의 각 날짜와 요일을 계산해서 AI에 제공
     const dates: string[] = []
     let cursor = dayjs.utc(data.eventDateStart).tz(data.participantTimezone)
     const end = dayjs.utc(data.eventDateEnd).tz(data.participantTimezone)
@@ -38,31 +37,31 @@ export const parseAvailabilityText = createServerFn({ method: 'POST' })
     }
 
     const response = (await env.AI.run(
-      '@cf/meta/llama-3.1-8b-instruct-fast',
+      '@cf/google/gemma-3-12b-it',
       {
         max_tokens: 2048,
         messages: [
           {
-            role: 'system',
-            content: `You extract availability from Korean text into JSON. Output ONLY a JSON array.
-
-Format: [{"date":"YYYY-MM-DD","startTime":"HH:mm","endTime":"HH:mm","status":"available"|"unavailable"}]
-
-Available dates: ${dates.join(', ')}
-Today: ${today}
-
-Rules:
-- Output LOCAL times, NOT UTC
-- 오전=09:00-12:00, 오후=13:00-18:00, 저녁=18:00-22:00, 하루종일=09:00-22:00
-- 주말=Saturday+Sunday, 평일=Monday-Friday
-- "안됨/불가/못" → status:"unavailable"
-- For unavailable days, use startTime:"09:00", endTime:"22:00"
-- Include BOTH available AND unavailable slots
-- Output ONLY the JSON array`,
-          },
-          {
             role: 'user',
-            content: data.text,
+            content: `당신은 일정 파서입니다. 사용자의 가용 시간을 JSON으로 변환하세요.
+
+가능한 날짜 목록: ${dates.join(', ')}
+오늘: ${today}
+
+사용자 입력: "${data.text}"
+
+규칙:
+- 사용자가 명시적으로 언급한 날짜/시간만 출력하세요
+- 언급하지 않은 날짜는 출력하지 마세요
+- 화=화요일, 목=목요일, 월수금=월요일+수요일+금요일
+- 주말=토요일+일요일, 평일=월~금
+- 2-6시, 2~6시 = 14:00~18:00 (오후)
+- 오전=09:00~12:00, 오후=13:00~18:00, 저녁=18:00~22:00
+- "가능" → "available", "안됨/불가/못" → "unavailable"
+- 불가능한 날은 하루종일: 09:00~22:00
+
+JSON 배열만 출력하세요. 설명 없이.
+[{"date":"YYYY-MM-DD","startTime":"HH:mm","endTime":"HH:mm","status":"available"|"unavailable"}]`,
           },
         ],
       },
@@ -88,7 +87,6 @@ Rules:
       )
     }
 
-    // 현지 시간 → UTC 변환
     return localSlots.map((slot) => ({
       start: dayjs
         .tz(`${slot.date} ${slot.startTime}`, data.participantTimezone)
