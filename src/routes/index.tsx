@@ -193,7 +193,7 @@ function CreateEventPage() {
           required
           value={participantsText}
           onChange={(e) => setParticipantsText(e.target.value)}
-          placeholder="달레, 샘, 에반"
+          placeholder="예: 달레, 샘, 에반"
           className="input"
         />
         <p className="mt-1 text-xs text-gray-500">
