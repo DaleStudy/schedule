@@ -154,6 +154,7 @@ export function TimeGrid({
               </td>
               {days.map((day) => {
                 const status = getCellStatus(day, time)
+                const hasSelections = slots.length > 0
                 const heatCount = heatmap?.get(getCellKey(day, time)) ?? 0
                 const heatOpacity =
                   heatmap && heatmapMax > 0 && !status
@@ -165,7 +166,9 @@ export function TimeGrid({
                     className={`cursor-pointer border p-0 ${
                       status === 'available'
                         ? 'bg-green-400 hover:bg-green-500'
-                        : 'hover:bg-gray-100'
+                        : hasSelections && !heatCount
+                          ? 'bg-red-50 hover:bg-red-100'
+                          : 'hover:bg-gray-100'
                     } ${time.endsWith(':00') ? 'border-t-gray-300' : 'border-t-gray-100'}`}
                     style={{
                       height: 20,
@@ -188,6 +191,9 @@ export function TimeGrid({
       <div className="mt-2 flex gap-4 text-xs text-gray-500">
         <span className="flex items-center gap-1">
           <span className="inline-block h-3 w-3 rounded bg-green-400" /> 가능
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-3 w-3 rounded bg-red-50 border border-red-200" /> 불가
         </span>
         {heatmap && (
           <span className="flex items-center gap-1">
