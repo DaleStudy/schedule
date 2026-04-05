@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Button, VStack, Flex, Heading, Text } from 'daleui'
+import { Button, Label, VStack, Flex, Heading, Text } from 'daleui'
 import {
   getEventByAdminToken,
   confirmEvent,
