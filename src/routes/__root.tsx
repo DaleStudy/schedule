@@ -34,10 +34,19 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <main className="mx-auto max-w-4xl px-4 py-8">
           {children}
         </main>
-        <footer className="border-t py-6 text-center text-sm text-gray-400">
-          <a href="https://www.dalestudy.com/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600">
-            DaleStudy
-          </a>
+        <footer className="mt-12 border-t bg-gray-50 py-8">
+          <div className="mx-auto max-w-4xl px-4 text-center text-sm text-gray-400">
+            <div className="mb-3 flex items-center justify-center gap-4">
+              <a href="https://www.dalestudy.com/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600">
+                DaleStudy
+              </a>
+              <span>|</span>
+              <a href="https://github.com/DaleStudy/schedule" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600">
+                GitHub
+              </a>
+            </div>
+            <p>&copy; {new Date().getFullYear()} DaleStudy. All rights reserved.</p>
+          </div>
         </footer>
         <Scripts />
       </body>
