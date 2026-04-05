@@ -321,7 +321,7 @@ function RespondPage() {
         <Text size="xs" tone="neutral" className="mb-2">
           셀을 클릭/드래그하여 가능한 시간을 선택하세요.
           {heatmap && heatmap.size > 0 &&
-            ' 파란색은 다른 참여자가 가능한 시간입니다.'}
+            ' 파란색은 다른 참여자가 가능한 시간이며, 진할수록 더 많은 참여자가 가능합니다.'}
         </Text>
         <TimeGrid
           eventDateStart={event.eventDateStart}
