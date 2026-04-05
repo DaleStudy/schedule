@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Button, TextInput, Select, Label } from 'daleui'
+import { Button, TextInput, Select, Label, VStack, HStack, Flex, Heading } from 'daleui'
 import {
   getEventByAdminToken,
   confirmEvent,
@@ -46,9 +46,9 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <VStack gap="24">
       <div>
-        <h1 className="text-2xl font-bold">{event.title}</h1>
+        <Heading level={1}>{event.title}</Heading>
         <p className="text-sm text-gray-500">주최자 대시보드</p>
       </div>
 
@@ -129,15 +129,15 @@ function AdminDashboard() {
         </Button>
       )}
 
-      <div className="space-y-3">
+      <VStack gap="12">
         <div>
           <Label labelText="참여자 공유 링크" />
           <CopyField value={`${baseUrl}/${event.id}`} />
         </div>
 
         <EventInfoSection event={event} adminToken={token} />
-      </div>
-    </div>
+      </VStack>
+    </VStack>
   )
 }
 
@@ -207,7 +207,7 @@ function EventInfoSection({
             <option value="120">2시간</option>
           </Select>
         </div>
-        <div className="flex gap-2">
+        <HStack gap="8">
           <Button
             size="sm"
             onClick={handleSave}
@@ -228,21 +228,21 @@ function EventInfoSection({
           >
             취소
           </Button>
-        </div>
+        </HStack>
       </div>
     )
   }
 
   return (
     <div className="rounded-lg border p-4">
-      <div className="mb-2 flex items-center justify-between">
+      <Flex align="center" justify="between" className="mb-2">
         <h3 className="text-sm font-medium text-gray-700">이벤트 정보</h3>
         {event.status === 'pending' && (
           <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
             수정
           </Button>
         )}
-      </div>
+      </Flex>
       <dl className="space-y-1 text-sm">
         <div className="flex justify-between">
           <dt className="text-gray-500">후보 날짜</dt>

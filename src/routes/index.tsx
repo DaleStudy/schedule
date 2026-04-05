@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { Button, Tag } from 'daleui'
+import { Button, Tag, VStack, Flex, HStack, Heading } from 'daleui'
 import { getLocalEvents, type LocalEvent } from '../lib/local-events'
 import { getEventStatuses } from '../server/functions/events'
 
@@ -38,13 +38,13 @@ function HomePage() {
   }, [])
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">내 모임</h1>
+    <VStack gap="24">
+      <Flex align="center" justify="between">
+        <Heading level={1}>내 모임</Heading>
         <Button size="sm" onClick={() => navigate({ to: '/new' })}>
           + 새 모임 만들기
         </Button>
-      </div>
+      </Flex>
 
       {localEvents.length > 0 ? (
         <div className="divide-y overflow-hidden rounded-lg border">
@@ -61,13 +61,13 @@ function HomePage() {
                 search={e.role === 'admin' ? { token: e.adminToken! } : {}}
                 className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
               >
-                <div className="flex items-center gap-2">
+                <HStack gap="8">
                   <span className="font-medium">{e.title}</span>
                   <span className="text-xs text-gray-400">
                     {e.role === 'admin' ? '주최' : '참여'}
                   </span>
                   {status && <StatusBadge status={status} />}
-                </div>
+                </HStack>
                 <span className="text-xs text-gray-400">
                   {new Date(e.createdAt).toLocaleDateString('ko-KR')}
                 </span>
@@ -86,7 +86,7 @@ function HomePage() {
           </Link>
         </div>
       )}
-    </div>
+    </VStack>
   )
 }
 

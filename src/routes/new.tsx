@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Button, TextInput, Select, Label } from 'daleui'
+import { Button, TextInput, Select, Label, VStack, Heading } from 'daleui'
 import { createEvent } from '../server/functions/events'
 import { saveLocalEvent } from '../lib/local-events'
 
@@ -74,7 +74,7 @@ function CreateEventPage() {
     const adminUrl = `${baseUrl}/${result.eventId}/admin?token=${result.adminToken}`
 
     return (
-      <div className="space-y-6">
+      <VStack gap="24">
         <div className="rounded-lg border border-green-200 bg-green-50 p-6">
           <h2 className="mb-2 text-lg font-semibold text-green-800">
             일정이 생성되었습니다!
@@ -84,7 +84,7 @@ function CreateEventPage() {
           </p>
         </div>
 
-        <div className="space-y-4">
+        <VStack gap="16">
           <div>
             <Label labelText="참여자 공유 링크" />
             <CopyField value={respondUrl} />
@@ -100,18 +100,19 @@ function CreateEventPage() {
               이 링크는 본인만 보관하세요.
             </p>
           </div>
-        </div>
+        </VStack>
 
         <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/' })}>
           홈으로 돌아가기
         </Button>
-      </div>
+      </VStack>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <h1 className="text-2xl font-bold">새 모임 일정 만들기</h1>
+    <form onSubmit={handleSubmit}>
+      <VStack gap="24">
+      <Heading level={1}>새 모임 일정 만들기</Heading>
 
       <Field label="모임 제목">
         <TextInput
@@ -188,6 +189,7 @@ function CreateEventPage() {
       <Button type="submit" fullWidth loading={isSubmitting}>
         {isSubmitting ? '생성 중...' : '일정 생성'}
       </Button>
+      </VStack>
     </form>
   )
 }

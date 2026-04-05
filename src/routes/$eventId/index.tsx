@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useMemo, useEffect } from 'react'
-import { Button, TextInput, Label } from 'daleui'
+import { Button, TextInput, Label, VStack, HStack, Heading } from 'daleui'
 import { dayjs } from '../../lib/time'
 import { getEvent } from '../../server/functions/events'
 import {
@@ -162,8 +162,8 @@ function RespondPage() {
   // 확정/취소된 이벤트
   if (event.status === 'confirmed' && event.confirmedStart) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">{event.title}</h1>
+      <VStack gap="24">
+        <Heading level={1}>{event.title}</Heading>
         <div className="rounded-lg border border-green-200 bg-green-50 p-6">
           <h2 className="mb-2 text-lg font-semibold text-green-800">
             확정된 모임 시간
@@ -179,28 +179,28 @@ function RespondPage() {
             })}
           </p>
         </div>
-      </div>
+      </VStack>
     )
   }
 
   if (event.status === 'cancelled') {
     return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold">{event.title}</h1>
+      <VStack gap="16">
+        <Heading level={1}>{event.title}</Heading>
         <div className="rounded-lg border border-red-200 bg-red-50 p-6">
           <p className="text-red-700">
             참여 가능한 공통 시간을 찾을 수 없어 일정이 취소되었습니다.
           </p>
         </div>
-      </div>
+      </VStack>
     )
   }
 
   // 제출 완료
   if (submitted) {
     return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold">{event.title}</h1>
+      <VStack gap="16">
+        <Heading level={1}>{event.title}</Heading>
         <div className="rounded-lg border border-green-200 bg-green-50 p-6">
           <h2 className="mb-2 text-lg font-semibold text-green-800">
             응답이 제출되었습니다!
@@ -219,16 +219,16 @@ function RespondPage() {
         >
           응답 수정하기
         </Button>
-      </div>
+      </VStack>
     )
   }
 
   // Step 1: 이메일 + 이름
   if (step === 'identify') {
     return (
-      <div className="space-y-6">
+      <VStack gap="24">
         <div>
-          <h1 className="text-2xl font-bold">{event.title}</h1>
+          <Heading level={1}>{event.title}</Heading>
           {event.description && (
             <p className="mt-1 text-gray-600">{event.description}</p>
           )}
@@ -247,7 +247,7 @@ function RespondPage() {
           </p>
         </div>
 
-        <div className="space-y-4">
+        <VStack gap="16">
           <Field label="이메일">
             <TextInput
               type="email"
@@ -273,16 +273,16 @@ function RespondPage() {
           >
             {isLoadingSlots ? '불러오는 중...' : '계속하기'}
           </Button>
-        </div>
-      </div>
+        </VStack>
+      </VStack>
     )
   }
 
   // Step 2: 응답 입력
   return (
-    <div className="space-y-6">
+    <VStack gap="24">
       <div>
-        <h1 className="text-2xl font-bold">{event.title}</h1>
+        <Heading level={1}>{event.title}</Heading>
         <p className="mt-1 text-sm text-gray-500">
           {name}님 ({email})
           <Button variant="ghost" size="sm" onClick={() => setStep('identify')}>
@@ -297,7 +297,7 @@ function RespondPage() {
       </div>
 
       <Field label="가능한 시간을 알려주세요">
-        <div className="flex gap-2">
+        <HStack gap="8">
           <textarea
             value={nlText}
             onChange={(e) => setNlText(e.target.value)}
@@ -314,7 +314,7 @@ function RespondPage() {
           >
             {isParsing ? '분석 중...' : '분석'}
           </Button>
-        </div>
+        </HStack>
         <p className="mt-1 text-xs text-gray-400">
           실험 기능: AI 분석은 시간이 걸릴 수 있고 정확하지 않을 수 있습니다.
           결과가 맞지 않으면 아래 캘린더에서 직접 조정하세요.
@@ -354,7 +354,7 @@ function RespondPage() {
       >
         {isSubmitting ? '제출 중...' : '응답 제출하기'}
       </Button>
-    </div>
+    </VStack>
   )
 }
 
