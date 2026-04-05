@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useMemo, useEffect } from 'react'
-import { Button, TextInput, Label, VStack, HStack, Heading, Text } from 'daleui'
+import { Button, TextInput, Label, Card, VStack, HStack, Heading, Text } from 'daleui'
 import { dayjs } from '../../lib/time'
 import { getEvent } from '../../server/functions/events'
 import {
@@ -225,18 +225,17 @@ function RespondPage() {
           )}
         </div>
 
-        <div className="rounded-lg border bg-gray-50 p-4 text-sm text-gray-600">
-          <p>
-            목표 기간:{' '}
-            {new Date(event.eventDateStart).toLocaleDateString('ko-KR')} ~{' '}
-            {new Date(event.eventDateEnd).toLocaleDateString('ko-KR')}
-          </p>
-          <p>소요 시간: {event.durationMinutes}분</p>
-          <p>
-            응답 마감:{' '}
-            {new Date(event.responseDeadlineAt).toLocaleDateString('ko-KR')}
-          </p>
-        </div>
+        <Card outline>
+          <Card.Body>
+            <Text size="sm" tone="neutral">
+              목표 기간: {new Date(event.eventDateStart).toLocaleDateString('ko-KR')} ~ {new Date(event.eventDateEnd).toLocaleDateString('ko-KR')}
+            </Text>
+            <Text size="sm" tone="neutral">소요 시간: {event.durationMinutes}분</Text>
+            <Text size="sm" tone="neutral">
+              응답 마감: {new Date(event.responseDeadlineAt).toLocaleDateString('ko-KR')}
+            </Text>
+          </Card.Body>
+        </Card>
 
         <VStack align="stretch" gap="16">
           <Field label="이메일">
@@ -335,11 +334,13 @@ function RespondPage() {
       </div>
 
       {slots.length > 0 && (
-        <div className="rounded-lg border bg-gray-50 p-4">
-          <Text size="sm" tone="neutral">
-            {slots.filter((s) => s.status === 'available').length}개 시간대 선택됨
-          </Text>
-        </div>
+        <Card outline>
+          <Card.Body>
+            <Text size="sm" tone="neutral">
+              {slots.filter((s) => s.status === 'available').length}개 시간대 선택됨
+            </Text>
+          </Card.Body>
+        </Card>
       )}
 
       <Button

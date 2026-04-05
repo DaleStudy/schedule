@@ -1,4 +1,5 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import { Link as DaleLink, HStack, Text } from 'daleui'
 
 import appCss from '../styles.css?url'
 
@@ -35,17 +36,18 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           {children}
         </main>
         <footer className="mt-12 border-t bg-gray-50 py-8">
-          <div className="mx-auto max-w-4xl px-4 text-center text-sm text-gray-400">
-            <div className="mb-3 flex items-center justify-center gap-4">
-              <a href="https://www.dalestudy.com/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600">
+          <div className="mx-auto max-w-4xl px-4 text-center">
+            <HStack gap="16" className="mb-3 justify-center">
+              <DaleLink href="https://www.dalestudy.com/" external size="sm" tone="neutral">
                 DaleStudy
-              </a>
-              <span>|</span>
-              <a href="https://github.com/DaleStudy/schedule" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600">
+              </DaleLink>
+              <DaleLink href="https://github.com/DaleStudy/schedule" external size="sm" tone="neutral">
                 GitHub
-              </a>
-            </div>
-            <p>&copy; {new Date().getFullYear()} DaleStudy. All rights reserved.</p>
+              </DaleLink>
+            </HStack>
+            <Text size="xs" tone="neutral">
+              &copy; {new Date().getFullYear()} DaleStudy. All rights reserved.
+            </Text>
           </div>
         </footer>
         <Scripts />
