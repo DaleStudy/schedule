@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Button, Label, VStack, Flex, Heading, Text } from 'daleui'
+import { Button, Label, Card, VStack, Flex, Heading, Text } from 'daleui'
 import {
   getEventByAdminToken,
   confirmEvent,
@@ -70,7 +70,7 @@ function AdminDashboard() {
       )}
 
       {event.status === 'pending' && (
-        <>
+        <VStack align="stretch" gap="16">
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
             <div className="mb-2 flex items-center justify-between">
               <span className="font-medium text-blue-800">응답 현황</span>
@@ -84,6 +84,30 @@ function AdminDashboard() {
             </p>
           </div>
 
+          {event.participants.length > 0 && (
+            <Card outline>
+              <Card.Body>
+                <Card.Title>응답자 ({respondedCount}/{event.participants.length}명)</Card.Title>
+              </Card.Body>
+              <div className="divide-y">
+                {event.participants.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between px-4 py-3"
+                  >
+                    <div>
+                      <Text as="span" weight="medium">{p.name}</Text>
+                      <Text as="span" size="xs" tone="neutral" className="ml-2">{p.email}</Text>
+                    </div>
+                    <Text as="span" size="xs" tone={p.respondedAt ? 'success' : 'neutral'}>
+                      {p.respondedAt ? '응답 완료' : '대기 중'}
+                    </Text>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
           {respondedCount > 0 && (
             <Button
               fullWidth
@@ -94,31 +118,7 @@ function AdminDashboard() {
               {isConfirming ? '확정 중...' : '지금 확정'}
             </Button>
           )}
-        </>
-      )}
-
-      {event.participants.length > 0 && (
-        <div>
-          <h3 className="mb-2 text-sm font-medium text-gray-700">
-            응답자 ({respondedCount}/{event.participants.length}명)
-          </h3>
-          <div className="divide-y rounded-lg border">
-            {event.participants.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center justify-between px-4 py-3"
-              >
-                <div>
-                  <Text as="span" weight="medium">{p.name}</Text>
-                  <Text as="span" size="xs" tone="neutral" className="ml-2">{p.email}</Text>
-                </div>
-                <Text as="span" size="xs" tone={p.respondedAt ? 'success' : 'neutral'}>
-                  {p.respondedAt ? '응답 완료' : '대기 중'}
-                </Text>
-              </div>
-            ))}
-          </div>
-        </div>
+        </VStack>
       )}
 
       <VStack align="stretch" gap="12">
@@ -141,54 +141,56 @@ function EventInfoSection({
   token: string
 }) {
   return (
-    <div className="rounded-lg border p-4">
-      <Flex align="center" justify="between" className="mb-2">
-        <h3 className="text-sm font-medium text-gray-700">모임 정보</h3>
-        {event.status === 'pending' && (
-          <Link
-            to="/$eventId/edit"
-            params={{ eventId: event.id }}
-            search={{ token }}
-            className="text-sm text-blue-600 hover:underline"
-          >
-            수정
-          </Link>
-        )}
-      </Flex>
-      <dl className="space-y-1 text-sm">
-        <div className="flex justify-between">
-          <dt className="text-gray-500">목표 기간</dt>
-          <dd>
-            {new Date(event.eventDateStart).toLocaleDateString('ko-KR')} ~{' '}
-            {new Date(event.eventDateEnd).toLocaleDateString('ko-KR')}
-          </dd>
-        </div>
-        <div className="flex justify-between">
-          <dt className="text-gray-500">소요 시간</dt>
-          <dd>{event.durationMinutes}분</dd>
-        </div>
-        {event.minParticipants && (
+    <Card outline>
+      <Card.Body>
+        <Flex align="center" justify="between">
+          <Card.Title>모임 정보</Card.Title>
+          {event.status === 'pending' && (
+            <Link
+              to="/$eventId/edit"
+              params={{ eventId: event.id }}
+              search={{ token }}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              수정
+            </Link>
+          )}
+        </Flex>
+        <dl className="space-y-1 text-sm">
           <div className="flex justify-between">
-            <dt className="text-gray-500">최소 인원</dt>
-            <dd>{event.minParticipants}명</dd>
+            <dt className="text-gray-500">목표 기간</dt>
+            <dd>
+              {new Date(event.eventDateStart).toLocaleDateString('ko-KR')} ~{' '}
+              {new Date(event.eventDateEnd).toLocaleDateString('ko-KR')}
+            </dd>
           </div>
-        )}
-        <div className="flex justify-between">
-          <dt className="text-gray-500">응답 마감</dt>
-          <dd>{new Date(event.responseDeadlineAt).toLocaleDateString('ko-KR')}</dd>
-        </div>
-        <div className="flex justify-between">
-          <dt className="text-gray-500">상태</dt>
-          <dd>
-            {event.status === 'pending'
-              ? '대기 중'
-              : event.status === 'confirmed'
-                ? '확정됨'
-                : '취소됨'}
-          </dd>
-        </div>
-      </dl>
-    </div>
+          <div className="flex justify-between">
+            <dt className="text-gray-500">소요 시간</dt>
+            <dd>{event.durationMinutes}분</dd>
+          </div>
+          {event.minParticipants && (
+            <div className="flex justify-between">
+              <dt className="text-gray-500">최소 인원</dt>
+              <dd>{event.minParticipants}명</dd>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <dt className="text-gray-500">응답 마감</dt>
+            <dd>{new Date(event.responseDeadlineAt).toLocaleDateString('ko-KR')}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-gray-500">상태</dt>
+            <dd>
+              {event.status === 'pending'
+                ? '대기 중'
+                : event.status === 'confirmed'
+                  ? '확정됨'
+                  : '취소됨'}
+            </dd>
+          </div>
+        </dl>
+      </Card.Body>
+    </Card>
   )
 }
 
