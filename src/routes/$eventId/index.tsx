@@ -38,6 +38,7 @@ function RespondPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [isLoadingSlots, setIsLoadingSlots] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
 
   const [slots, setSlots] = useState<
     Array<{ start: string; end: string; status: 'available' | 'unavailable' }>
@@ -92,6 +93,7 @@ function RespondPage() {
             status: s.status as 'available' | 'unavailable',
           })),
         )
+        setIsEditing(true)
       }
       setStep('respond')
     } catch {
@@ -281,6 +283,11 @@ function RespondPage() {
             변경
           </Button>
         </p>
+        {isEditing && (
+          <Text size="sm" tone="info" className="mt-2">
+            이전에 제출한 응답을 수정합니다.
+          </Text>
+        )}
       </div>
 
       <div className="text-sm">
@@ -344,7 +351,7 @@ function RespondPage() {
         disabled={isSubmitting || slots.length === 0}
         loading={isSubmitting}
       >
-        {isSubmitting ? '제출 중...' : '응답 제출하기'}
+        {isSubmitting ? '제출 중...' : isEditing ? '응답 수정하기' : '응답 제출하기'}
       </Button>
     </VStack>
   )
