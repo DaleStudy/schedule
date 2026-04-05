@@ -51,6 +51,11 @@ function AdminDashboard() {
         <Text size="sm" tone="neutral">주최자 대시보드</Text>
       </div>
 
+      <div>
+        <Label labelText="참여자 공유 링크" />
+        <CopyField value={`${baseUrl}/${event.id}`} />
+      </div>
+
       {event.status === 'confirmed' && event.confirmedStart && (
         <div className="rounded-lg border border-green-200 bg-green-50 p-6">
           <h2 className="mb-2 text-lg font-semibold text-green-800">
@@ -121,14 +126,7 @@ function AdminDashboard() {
         </VStack>
       )}
 
-      <VStack align="stretch" gap="12">
-        <div>
-          <Label labelText="참여자 공유 링크" />
-          <CopyField value={`${baseUrl}/${event.id}`} />
-        </div>
-
-        <EventInfoSection event={event} token={token} />
-      </VStack>
+      <EventInfoSection event={event} token={token} />
     </VStack>
   )
 }
