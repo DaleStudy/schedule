@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Button, TextInput, Select, Label, VStack, Heading, Text } from 'daleui'
+import { Copy, Check } from 'lucide-react'
 import { createEvent } from '../server/functions/events'
 import { getUserProfile, saveUserProfile } from '../lib/local-events'
 
@@ -234,7 +235,7 @@ function CopyField({ value }: { value: string }) {
     <div className="flex items-center gap-2 rounded border bg-gray-50 px-3 py-2">
       <a href={value} target="_blank" rel="noopener noreferrer" className="flex-1 truncate text-sm text-blue-600 hover:underline">{value}</a>
       <Button type="button" variant="ghost" size="sm" onClick={copy}>
-        {copied ? '복사됨!' : '복사'}
+        {copied ? <><Check size={14} /> 복사됨</> : <><Copy size={14} /> 복사</>}
       </Button>
     </div>
   )

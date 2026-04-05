@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button, Label, Card, VStack, Flex, Heading, Text } from 'daleui'
+import { Copy, Check, SquarePen } from 'lucide-react'
 import {
   getEventByAdminToken,
   confirmEvent,
@@ -144,9 +145,9 @@ function EventInfoSection({
               to="/$eventId/edit"
               params={{ eventId: event.id }}
               search={{ token }}
-              className="text-sm text-blue-600 hover:underline"
+              className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
             >
-              수정
+              <SquarePen size={14} /> 수정
             </Link>
           )}
         </Flex>
@@ -201,7 +202,7 @@ function CopyField({ value }: { value: string }) {
     <div className="flex items-center gap-2 rounded border bg-gray-50 px-3 py-2">
       <a href={value} target="_blank" rel="noopener noreferrer" className="flex-1 truncate text-sm text-blue-600 hover:underline">{value}</a>
       <Button type="button" variant="ghost" size="sm" onClick={copy}>
-        {copied ? '복사됨!' : '복사'}
+        {copied ? <><Check size={14} /> 복사됨</> : <><Copy size={14} /> 복사</>}
       </Button>
     </div>
   )
