@@ -97,16 +97,21 @@ function AdminDashboard() {
         </>
       )}
 
-      {respondedCount > 0 && (
+      {event.participants.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-medium text-gray-700">참여자</h3>
+          <h3 className="mb-2 text-sm font-medium text-gray-700">
+            응답자 ({respondedCount}/{event.participants.length}명)
+          </h3>
           <div className="divide-y rounded-lg border">
             {event.participants.map((p) => (
               <div
                 key={p.id}
                 className="flex items-center justify-between px-4 py-3"
               >
-                <Text as="span" weight="medium">{p.name}</Text>
+                <div>
+                  <Text as="span" weight="medium">{p.name}</Text>
+                  <Text as="span" size="xs" tone="neutral" className="ml-2">{p.email}</Text>
+                </div>
                 <Text as="span" size="xs" tone={p.respondedAt ? 'success' : 'neutral'}>
                   {p.respondedAt ? '응답 완료' : '대기 중'}
                 </Text>
