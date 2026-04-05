@@ -211,7 +211,7 @@ function RespondPage() {
             setStep('respond')
           }}
         >
-          응답 수정하기
+          응답 수정
         </Button>
       </VStack>
     )
@@ -265,7 +265,7 @@ function RespondPage() {
             disabled={!email.trim() || !name.trim() || isLoadingSlots}
             loading={isLoadingSlots}
           >
-            {isLoadingSlots ? '불러오는 중...' : '계속하기'}
+            {isLoadingSlots ? '불러오는 중...' : '계속'}
           </Button>
         </VStack>
       </VStack>
@@ -351,7 +351,7 @@ function RespondPage() {
         disabled={isSubmitting || slots.length === 0}
         loading={isSubmitting}
       >
-        {isSubmitting ? '제출 중...' : isEditing ? '응답 수정하기' : '응답 제출하기'}
+        {isSubmitting ? '제출 중...' : isEditing ? '응답 수정' : '응답 제출'}
       </Button>
     </VStack>
   )

@@ -92,7 +92,7 @@ function AdminDashboard() {
               disabled={isConfirming}
               loading={isConfirming}
             >
-              {isConfirming ? '확정 중...' : '지금 확정하기'}
+              {isConfirming ? '확정 중...' : '지금 확정'}
             </Button>
           )}
         </>
@@ -123,7 +123,7 @@ function AdminDashboard() {
           variant="outline"
           onClick={() => { window.location.href = `/${event.id}` }}
         >
-          응답하기
+          응답
         </Button>
       )}
 
