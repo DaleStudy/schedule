@@ -73,7 +73,7 @@ function CreateEventPage() {
     const adminUrl = `${baseUrl}/${result.eventId}/admin?token=${result.adminToken}`
 
     return (
-      <VStack gap="24">
+      <VStack align="stretch" gap="24">
         <div className="rounded-lg border border-green-200 bg-green-50 p-6">
           <h2 className="mb-2 text-lg font-semibold text-green-800">
             일정이 생성되었습니다!
@@ -83,7 +83,7 @@ function CreateEventPage() {
           </Text>
         </div>
 
-        <VStack gap="16">
+        <VStack align="stretch" gap="16">
           <div>
             <Label labelText="공유 링크" />
             <CopyField value={respondUrl} />
@@ -110,7 +110,7 @@ function CreateEventPage() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <VStack gap="24">
+      <VStack align="stretch" gap="24">
       <Heading level={1}>모임 만들기</Heading>
 
       <Field label="모임 제목">

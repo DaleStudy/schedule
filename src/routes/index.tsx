@@ -39,7 +39,7 @@ function HomePage() {
   }, [])
 
   return (
-    <VStack gap="24">
+    <VStack align="stretch" gap="24">
       <Flex align="center" justify="between">
         <Heading level={1}>모임 목록</Heading>
         <Button size="sm" onClick={() => navigate({ to: '/new' })}>

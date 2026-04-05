@@ -46,7 +46,7 @@ function AdminDashboard() {
   }
 
   return (
-    <VStack gap="24">
+    <VStack align="stretch" gap="24">
       <div>
         <Heading level={1}>{event.title}</Heading>
         <Text size="sm" tone="neutral">주최자 대시보드</Text>
@@ -127,7 +127,7 @@ function AdminDashboard() {
         </Button>
       )}
 
-      <VStack gap="12">
+      <VStack align="stretch" gap="12">
         <div>
           <Label labelText="공유 링크" />
           <CopyField value={`${baseUrl}/${event.id}`} />

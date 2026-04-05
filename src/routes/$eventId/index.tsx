@@ -161,7 +161,7 @@ function RespondPage() {
   // 확정/취소된 이벤트
   if (event.status === 'confirmed' && event.confirmedStart) {
     return (
-      <VStack gap="24">
+      <VStack align="stretch" gap="24">
         <Heading level={1}>{event.title}</Heading>
         <div className="rounded-lg border border-green-200 bg-green-50 p-6">
           <h2 className="mb-2 text-lg font-semibold text-green-800">
@@ -184,7 +184,7 @@ function RespondPage() {
 
   if (event.status === 'cancelled') {
     return (
-      <VStack gap="16">
+      <VStack align="stretch" gap="16">
         <Heading level={1}>{event.title}</Heading>
         <div className="rounded-lg border border-red-200 bg-red-50 p-6">
           <Text tone="danger">
@@ -198,7 +198,7 @@ function RespondPage() {
   // 제출 완료
   if (submitted) {
     return (
-      <VStack gap="16">
+      <VStack align="stretch" gap="16">
         <Heading level={1}>{event.title}</Heading>
         <div className="rounded-lg border border-green-200 bg-green-50 p-6">
           <h2 className="mb-2 text-lg font-semibold text-green-800">
@@ -225,7 +225,7 @@ function RespondPage() {
   // Step 1: 이메일 + 이름
   if (step === 'identify') {
     return (
-      <VStack gap="24">
+      <VStack align="stretch" gap="24">
         <div>
           <Heading level={1}>{event.title}</Heading>
           {event.description && (
@@ -246,7 +246,7 @@ function RespondPage() {
           </p>
         </div>
 
-        <VStack gap="16">
+        <VStack align="stretch" gap="16">
           <Field label="이메일">
             <TextInput
               type="email"
@@ -279,7 +279,7 @@ function RespondPage() {
 
   // Step 2: 응답 입력
   return (
-    <VStack gap="24">
+    <VStack align="stretch" gap="24">
       <div>
         <Heading level={1}>{event.title}</Heading>
         <p className="mt-1 text-sm text-gray-500">
