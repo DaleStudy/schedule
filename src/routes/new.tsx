@@ -89,7 +89,7 @@ function CreateEventPage() {
 
         <VStack align="stretch" gap="16">
           <div>
-            <Label labelText="공유 링크" />
+            <Label labelText="참여자 공유 링크" />
             <CopyField value={respondUrl} />
             <Text size="xs" tone="neutral" className="mt-1">
               이 링크 하나로 모든 참여자가 응답할 수 있습니다.

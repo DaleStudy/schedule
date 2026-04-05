@@ -129,7 +129,7 @@ function AdminDashboard() {
 
       <VStack align="stretch" gap="12">
         <div>
-          <Label labelText="공유 링크" />
+          <Label labelText="참여자 공유 링크" />
           <CopyField value={`${baseUrl}/${event.id}`} />
         </div>
 
