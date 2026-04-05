@@ -183,6 +183,8 @@ export const updateEvent = createServerFn({ method: 'POST' })
       eventDateStart?: string
       eventDateEnd?: string
       responseDeadlineAt?: string
+      minParticipants?: number | null
+      organizerEmail?: string
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -204,6 +206,8 @@ export const updateEvent = createServerFn({ method: 'POST' })
     if (data.eventDateStart !== undefined) updates.eventDateStart = data.eventDateStart
     if (data.eventDateEnd !== undefined) updates.eventDateEnd = data.eventDateEnd
     if (data.responseDeadlineAt !== undefined) updates.responseDeadlineAt = data.responseDeadlineAt
+    if (data.minParticipants !== undefined) updates.minParticipants = data.minParticipants
+    if (data.organizerEmail !== undefined) updates.organizerEmail = data.organizerEmail
 
     await db.update(events).set(updates).where(eq(events.id, data.eventId))
 

@@ -1,10 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Button, TextInput, Select, Label, VStack, HStack, Flex, Heading, Text } from 'daleui'
+import { Button, VStack, Flex, Heading, Text } from 'daleui'
 import {
   getEventByAdminToken,
   confirmEvent,
-  updateEvent,
 } from '../../server/functions/events'
 
 interface AdminSearch {
@@ -123,7 +122,7 @@ function AdminDashboard() {
           <CopyField value={`${baseUrl}/${event.id}`} />
         </div>
 
-        <EventInfoSection event={event} adminToken={token} />
+        <EventInfoSection event={event} token={token} />
       </VStack>
     </VStack>
   )
@@ -131,104 +130,24 @@ function AdminDashboard() {
 
 function EventInfoSection({
   event,
-  adminToken,
+  token,
 }: {
-  event: { id: string; title: string; description: string | null; durationMinutes: number; eventDateStart: string; eventDateEnd: string; responseDeadlineAt: string; status: string }
-  adminToken: string
+  event: { id: string; durationMinutes: number; eventDateStart: string; eventDateEnd: string; responseDeadlineAt: string; status: string; minParticipants: number | null }
+  token: string
 }) {
-  const [editing, setEditing] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [title, setTitle] = useState(event.title)
-  const [description, setDescription] = useState(event.description || '')
-  const [durationMinutes, setDurationMinutes] = useState(event.durationMinutes)
-
-  const handleSave = async () => {
-    setIsSaving(true)
-    try {
-      await updateEvent({
-        data: {
-          eventId: event.id,
-          adminToken,
-          title,
-          description: description || undefined,
-          durationMinutes,
-        },
-      })
-      setEditing(false)
-      window.location.reload()
-    } catch (err) {
-      alert((err as Error).message)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  if (editing) {
-    return (
-      <div className="space-y-3 rounded-lg border p-4">
-        <h3 className="text-sm font-medium text-gray-700">모임 수정</h3>
-        <div>
-          <Label labelText="제목" />
-          <TextInput
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-        <div>
-          <Label labelText="설명" />
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            className="input"
-          />
-        </div>
-        <div>
-          <Label labelText="소요 시간" />
-          <Select
-            value={String(durationMinutes)}
-            onChange={(e) => setDurationMinutes(Number(e.target.value))}
-          >
-            <option value="30">30분</option>
-            <option value="60">1시간</option>
-            <option value="90">1시간 30분</option>
-            <option value="120">2시간</option>
-          </Select>
-        </div>
-        <HStack gap="8">
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={isSaving || !title.trim()}
-            loading={isSaving}
-          >
-            {isSaving ? '저장 중...' : '저장'}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              setTitle(event.title)
-              setDescription(event.description || '')
-              setDurationMinutes(event.durationMinutes)
-              setEditing(false)
-            }}
-          >
-            취소
-          </Button>
-        </HStack>
-      </div>
-    )
-  }
-
   return (
     <div className="rounded-lg border p-4">
       <Flex align="center" justify="between" className="mb-2">
         <h3 className="text-sm font-medium text-gray-700">모임 정보</h3>
         {event.status === 'pending' && (
-          <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+          <Link
+            to="/$eventId/edit"
+            params={{ eventId: event.id }}
+            search={{ token }}
+            className="text-sm text-blue-600 hover:underline"
+          >
             수정
-          </Button>
+          </Link>
         )}
       </Flex>
       <dl className="space-y-1 text-sm">
@@ -242,6 +161,16 @@ function EventInfoSection({
         <div className="flex justify-between">
           <dt className="text-gray-500">소요 시간</dt>
           <dd>{event.durationMinutes}분</dd>
+        </div>
+        {event.minParticipants && (
+          <div className="flex justify-between">
+            <dt className="text-gray-500">최소 인원</dt>
+            <dd>{event.minParticipants}명</dd>
+          </div>
+        )}
+        <div className="flex justify-between">
+          <dt className="text-gray-500">응답 마감</dt>
+          <dd>{new Date(event.responseDeadlineAt).toLocaleDateString('ko-KR')}</dd>
         </div>
         <div className="flex justify-between">
           <dt className="text-gray-500">상태</dt>
