@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Button, TextInput, Select, Label, VStack, HStack, Flex, Heading, Text } from 'daleui'
-import { getUserProfile } from '../../lib/local-events'
 import {
   getEventByAdminToken,
   confirmEvent,
@@ -30,12 +29,6 @@ function AdminDashboard() {
 
   const respondedCount = event.participants.filter((p) => p.respondedAt).length
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-  const myEmail = useMemo(() => {
-    return event.organizerEmail || getUserProfile()?.email || ''
-  }, [event.organizerEmail])
-  const hasMyResponse = event.participants.some(
-    (p) => p.respondedAt && myEmail && p.email === myEmail,
-  )
 
   const handleConfirm = async () => {
     if (!confirm('현재 응답을 기반으로 최적 시간을 확정하시겠습니까?')) return
@@ -122,16 +115,6 @@ function AdminDashboard() {
             ))}
           </div>
         </div>
-      )}
-
-      {event.status === 'pending' && (
-        <Button
-          fullWidth
-          variant="outline"
-          onClick={() => { window.location.href = `/${event.id}` }}
-        >
-          {hasMyResponse ? '응답 수정' : '응답 제출'}
-        </Button>
       )}
 
       <VStack align="stretch" gap="12">
