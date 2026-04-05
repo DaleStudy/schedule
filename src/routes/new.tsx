@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { Button, TextInput, Select, Label } from 'daleui'
 import { createEvent } from '../server/functions/events'
 import { saveLocalEvent } from '../lib/local-events'
 
@@ -85,9 +86,7 @@ function CreateEventPage() {
 
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              참여자 공유 링크
-            </label>
+            <Label labelText="참여자 공유 링크" />
             <CopyField value={respondUrl} />
             <p className="mt-1 text-xs text-gray-500">
               이 링크 하나로 모든 참여자가 응답할 수 있습니다.
@@ -95,9 +94,7 @@ function CreateEventPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              주최자 관리 링크
-            </label>
+            <Label labelText="주최자 관리 링크" />
             <CopyField value={adminUrl} />
             <p className="mt-1 text-xs text-gray-500">
               이 링크는 본인만 보관하세요.
@@ -105,12 +102,9 @@ function CreateEventPage() {
           </div>
         </div>
 
-        <button
-          onClick={() => navigate({ to: '/' })}
-          className="text-sm text-blue-600 hover:underline"
-        >
+        <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/' })}>
           홈으로 돌아가기
-        </button>
+        </Button>
       </div>
     )
   }
@@ -120,53 +114,48 @@ function CreateEventPage() {
       <h1 className="text-2xl font-bold">새 모임 일정 만들기</h1>
 
       <Field label="모임 제목">
-        <input
-          type="text"
+        <TextInput
           required
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="예: 커피챗"
-          className="input"
         />
       </Field>
 
       <Field label="모임 시간">
-        <select
-          value={durationMinutes}
+        <Select
+          value={String(durationMinutes)}
           onChange={(e) => setDurationMinutes(Number(e.target.value))}
-          className="input"
         >
-          <option value={30}>30분</option>
-          <option value={60}>1시간</option>
-          <option value={90}>1시간 30분</option>
-          <option value={120}>2시간</option>
-        </select>
+          <option value="30">30분</option>
+          <option value="60">1시간</option>
+          <option value="90">1시간 30분</option>
+          <option value="120">2시간</option>
+        </Select>
       </Field>
 
       <div className="grid grid-cols-2 gap-4">
         <Field label="모임 가능 기간">
-          <select
-            value={eventWeeks}
+          <Select
+            value={String(eventWeeks)}
             onChange={(e) => setEventWeeks(Number(e.target.value))}
-            className="input"
           >
-            <option value={1}>1주 내</option>
-            <option value={2}>2주 내</option>
-            <option value={3}>3주 내</option>
-            <option value={4}>4주 내</option>
-          </select>
+            <option value="1">1주 내</option>
+            <option value="2">2주 내</option>
+            <option value="3">3주 내</option>
+            <option value="4">4주 내</option>
+          </Select>
         </Field>
         <Field label="응답 마감">
-          <select
-            value={deadlineDaysBefore}
+          <Select
+            value={String(deadlineDaysBefore)}
             onChange={(e) => setDeadlineDaysBefore(Number(e.target.value))}
-            className="input"
           >
-            <option value={3}>3일 전 확정</option>
-            <option value={5}>5일 전 확정</option>
-            <option value={7}>1주 전 확정</option>
-            <option value={14}>2주 전 확정</option>
-          </select>
+            <option value="3">3일 전 확정</option>
+            <option value="5">5일 전 확정</option>
+            <option value="7">1주 전 확정</option>
+            <option value="14">2주 전 확정</option>
+          </Select>
           <p className="mt-1 text-xs text-gray-500">
             모임 시작일 기준으로 이 기간 전에 자동 확정됩니다.
           </p>
@@ -174,13 +163,12 @@ function CreateEventPage() {
       </div>
 
       <Field label="최소 인원 (선택)">
-        <input
+        <TextInput
           type="number"
           min={2}
           value={minParticipants}
           onChange={(e) => setMinParticipants(e.target.value)}
           placeholder="미설정 시 인원 제한 없음"
-          className="input"
         />
         <p className="mt-1 text-xs text-gray-500">
           이 인원 미만이면 모임이 성사되지 않습니다.
@@ -197,13 +185,9 @@ function CreateEventPage() {
         />
       </Field>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full rounded bg-blue-600 px-4 py-3 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-      >
+      <Button type="submit" fullWidth loading={isSubmitting}>
         {isSubmitting ? '생성 중...' : '일정 생성'}
-      </button>
+      </Button>
     </form>
   )
 }
@@ -217,9 +201,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">
-        {label}
-      </label>
+      <Label labelText={label} />
       {children}
     </div>
   )
@@ -237,13 +219,9 @@ function CopyField({ value }: { value: string }) {
   return (
     <div className="flex items-center gap-2 rounded border bg-gray-50 px-3 py-2">
       <span className="flex-1 truncate text-sm text-gray-600">{value}</span>
-      <button
-        type="button"
-        onClick={copy}
-        className="shrink-0 text-sm font-medium text-blue-600 hover:text-blue-800"
-      >
+      <Button type="button" variant="ghost" size="sm" onClick={copy}>
         {copied ? '복사됨!' : '복사'}
-      </button>
+      </Button>
     </div>
   )
 }

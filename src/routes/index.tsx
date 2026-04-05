@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
+import { Button, Tag } from 'daleui'
 import { getLocalEvents, type LocalEvent } from '../lib/local-events'
 import { getEventStatuses } from '../server/functions/events'
 
@@ -16,6 +17,7 @@ interface EventStatus {
 }
 
 function HomePage() {
+  const navigate = useNavigate()
   const [localEvents, setLocalEvents] = useState<LocalEvent[]>([])
   const [statuses, setStatuses] = useState<Map<string, EventStatus>>(new Map())
 
@@ -39,12 +41,9 @@ function HomePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">내 모임</h1>
-        <Link
-          to="/new"
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
+        <Button size="sm" onClick={() => navigate({ to: '/new' })}>
           + 새 모임 만들기
-        </Link>
+        </Button>
       </div>
 
       {localEvents.length > 0 ? (
@@ -99,17 +98,13 @@ function StatusBadge({ status }: { status: EventStatus }) {
     new Date(status.confirmedEnd) < now
 
   if (isPast) {
-    return (
-      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
-        종료
-      </span>
-    )
+    return <Tag tone="neutral">종료</Tag>
   }
 
-  const styles: Record<string, string> = {
-    pending: 'bg-yellow-100 text-yellow-700',
-    confirmed: 'bg-green-100 text-green-700',
-    cancelled: 'bg-red-100 text-red-700',
+  const tones: Record<string, 'warning' | 'success' | 'danger'> = {
+    pending: 'warning',
+    confirmed: 'success',
+    cancelled: 'danger',
   }
   const labels: Record<string, string> = {
     pending: '대기 중',
@@ -118,10 +113,8 @@ function StatusBadge({ status }: { status: EventStatus }) {
   }
 
   return (
-    <span
-      className={`rounded-full px-2 py-0.5 text-xs ${styles[status.status] ?? ''}`}
-    >
+    <Tag tone={tones[status.status]}>
       {labels[status.status] ?? status.status}
-    </span>
+    </Tag>
   )
 }

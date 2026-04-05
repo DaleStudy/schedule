@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useMemo, useEffect } from 'react'
+import { Button, TextInput, Label } from 'daleui'
 import { dayjs } from '../../lib/time'
 import { getEvent } from '../../server/functions/events'
 import {
@@ -208,15 +209,16 @@ function RespondPage() {
             응답 마감일이 되면 최적 시간이 자동으로 확정됩니다.
           </p>
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => {
             setSubmitted(false)
             setStep('respond')
           }}
-          className="text-sm text-blue-600 hover:underline"
         >
           응답 수정하기
-        </button>
+        </Button>
       </div>
     )
   }
@@ -247,32 +249,30 @@ function RespondPage() {
 
         <div className="space-y-4">
           <Field label="이메일">
-            <input
+            <TextInput
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="예: dale@example.com"
-              className="input"
             />
           </Field>
           <Field label="이름">
-            <input
-              type="text"
+            <TextInput
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="예: 달레"
-              className="input"
             />
           </Field>
-          <button
+          <Button
+            fullWidth
             onClick={handleContinue}
             disabled={!email.trim() || !name.trim() || isLoadingSlots}
-            className="w-full rounded bg-blue-600 px-4 py-3 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            loading={isLoadingSlots}
           >
             {isLoadingSlots ? '불러오는 중...' : '계속하기'}
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -285,12 +285,9 @@ function RespondPage() {
         <h1 className="text-2xl font-bold">{event.title}</h1>
         <p className="mt-1 text-sm text-gray-500">
           {name}님 ({email})
-          <button
-            onClick={() => setStep('identify')}
-            className="ml-2 text-blue-600 hover:underline"
-          >
+          <Button variant="ghost" size="sm" onClick={() => setStep('identify')}>
             변경
-          </button>
+          </Button>
         </p>
       </div>
 
@@ -308,13 +305,15 @@ function RespondPage() {
             rows={2}
             className="input flex-1"
           />
-          <button
+          <Button
+            size="sm"
             onClick={handleParse}
             disabled={isParsing || !nlText.trim()}
-            className="shrink-0 self-end rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            loading={isParsing}
+            className="shrink-0 self-end"
           >
             {isParsing ? '분석 중...' : '분석'}
-          </button>
+          </Button>
         </div>
         <p className="mt-1 text-xs text-gray-400">
           실험 기능: AI 분석은 시간이 걸릴 수 있고 정확하지 않을 수 있습니다.
@@ -347,13 +346,14 @@ function RespondPage() {
         </div>
       )}
 
-      <button
+      <Button
+        fullWidth
         onClick={handleSubmit}
         disabled={isSubmitting || slots.length === 0}
-        className="w-full rounded bg-green-600 px-4 py-3 font-medium text-white hover:bg-green-700 disabled:opacity-50"
+        loading={isSubmitting}
       >
         {isSubmitting ? '제출 중...' : '응답 제출하기'}
-      </button>
+      </Button>
     </div>
   )
 }
@@ -367,9 +367,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">
-        {label}
-      </label>
+      <Label labelText={label} />
       {children}
     </div>
   )

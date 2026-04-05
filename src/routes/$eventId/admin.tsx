@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+import { Button, TextInput, Select, Label } from 'daleui'
 import {
   getEventByAdminToken,
   confirmEvent,
@@ -85,13 +86,14 @@ function AdminDashboard() {
           </div>
 
           {respondedCount > 0 && (
-            <button
+            <Button
+              fullWidth
               onClick={handleConfirm}
               disabled={isConfirming}
-              className="w-full rounded bg-green-600 px-4 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              loading={isConfirming}
             >
               {isConfirming ? '확정 중...' : '지금 확정하기'}
-            </button>
+            </Button>
           )}
         </>
       )}
@@ -118,19 +120,18 @@ function AdminDashboard() {
       )}
 
       {event.status === 'pending' && (
-        <a
-          href={`/${event.id}`}
-          className="block w-full rounded border border-blue-200 bg-blue-50 px-4 py-3 text-center text-sm font-medium text-blue-700 hover:bg-blue-100"
+        <Button
+          fullWidth
+          variant="outline"
+          onClick={() => { window.location.href = `/${event.id}` }}
         >
           내 응답 입력하기
-        </a>
+        </Button>
       )}
 
       <div className="space-y-3">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            참여자 공유 링크
-          </label>
+          <Label labelText="참여자 공유 링크" />
           <CopyField value={`${baseUrl}/${event.id}`} />
         </div>
 
@@ -179,16 +180,14 @@ function EventInfoSection({
       <div className="space-y-3 rounded-lg border p-4">
         <h3 className="text-sm font-medium text-gray-700">이벤트 수정</h3>
         <div>
-          <label className="mb-1 block text-xs text-gray-500">제목</label>
-          <input
-            type="text"
+          <Label labelText="제목" />
+          <TextInput
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="input"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-500">설명</label>
+          <Label labelText="설명" />
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -197,37 +196,38 @@ function EventInfoSection({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-500">소요 시간</label>
-          <select
-            value={durationMinutes}
+          <Label labelText="소요 시간" />
+          <Select
+            value={String(durationMinutes)}
             onChange={(e) => setDurationMinutes(Number(e.target.value))}
-            className="input"
           >
-            <option value={30}>30분</option>
-            <option value={60}>1시간</option>
-            <option value={90}>1시간 30분</option>
-            <option value={120}>2시간</option>
-          </select>
+            <option value="30">30분</option>
+            <option value="60">1시간</option>
+            <option value="90">1시간 30분</option>
+            <option value="120">2시간</option>
+          </Select>
         </div>
         <div className="flex gap-2">
-          <button
+          <Button
+            size="sm"
             onClick={handleSave}
             disabled={isSaving || !title.trim()}
-            className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            loading={isSaving}
           >
             {isSaving ? '저장 중...' : '저장'}
-          </button>
-          <button
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
             onClick={() => {
               setTitle(event.title)
               setDescription(event.description || '')
               setDurationMinutes(event.durationMinutes)
               setEditing(false)
             }}
-            className="rounded border px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
           >
             취소
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -238,12 +238,9 @@ function EventInfoSection({
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-700">이벤트 정보</h3>
         {event.status === 'pending' && (
-          <button
-            onClick={() => setEditing(true)}
-            className="text-xs text-blue-600 hover:underline"
-          >
+          <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
             수정
-          </button>
+          </Button>
         )}
       </div>
       <dl className="space-y-1 text-sm">
@@ -285,12 +282,9 @@ function CopyField({ value }: { value: string }) {
   return (
     <div className="flex items-center gap-2 rounded border bg-gray-50 px-3 py-2">
       <span className="flex-1 truncate text-sm text-gray-600">{value}</span>
-      <button
-        onClick={copy}
-        className="shrink-0 text-sm font-medium text-blue-600 hover:text-blue-800"
-      >
+      <Button type="button" variant="ghost" size="sm" onClick={copy}>
         {copied ? '복사됨!' : '복사'}
-      </button>
+      </Button>
     </div>
   )
 }
