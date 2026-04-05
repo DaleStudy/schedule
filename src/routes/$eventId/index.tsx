@@ -236,7 +236,7 @@ function RespondPage() {
 
         <div className="rounded-lg border bg-gray-50 p-4 text-sm text-gray-600">
           <p>
-            후보 날짜:{' '}
+            목표 기간:{' '}
             {new Date(event.eventDateStart).toLocaleDateString('ko-KR')} ~{' '}
             {new Date(event.eventDateEnd).toLocaleDateString('ko-KR')}
           </p>

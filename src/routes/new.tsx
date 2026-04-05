@@ -86,7 +86,7 @@ function CreateEventPage() {
 
         <VStack gap="16">
           <div>
-            <Label labelText="참여자 공유 링크" />
+            <Label labelText="공유 링크" />
             <CopyField value={respondUrl} />
             <p className="mt-1 text-xs text-gray-500">
               이 링크 하나로 모든 참여자가 응답할 수 있습니다.
@@ -112,7 +112,7 @@ function CreateEventPage() {
   return (
     <form onSubmit={handleSubmit}>
       <VStack gap="24">
-      <Heading level={1}>새 모임 일정 만들기</Heading>
+      <Heading level={1}>모임 만들기</Heading>
 
       <Field label="모임 제목">
         <TextInput
@@ -136,7 +136,7 @@ function CreateEventPage() {
       </Field>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field label="모임 가능 기간">
+        <Field label="목표 기간">
           <Select
             value={String(eventWeeks)}
             onChange={(e) => setEventWeeks(Number(e.target.value))}

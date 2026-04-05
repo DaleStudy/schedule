@@ -125,13 +125,13 @@ function AdminDashboard() {
           variant="outline"
           onClick={() => { window.location.href = `/${event.id}` }}
         >
-          내 응답 입력하기
+          응답하기
         </Button>
       )}
 
       <VStack gap="12">
         <div>
-          <Label labelText="참여자 공유 링크" />
+          <Label labelText="공유 링크" />
           <CopyField value={`${baseUrl}/${event.id}`} />
         </div>
 
@@ -178,7 +178,7 @@ function EventInfoSection({
   if (editing) {
     return (
       <div className="space-y-3 rounded-lg border p-4">
-        <h3 className="text-sm font-medium text-gray-700">이벤트 수정</h3>
+        <h3 className="text-sm font-medium text-gray-700">모임 수정</h3>
         <div>
           <Label labelText="제목" />
           <TextInput
@@ -236,7 +236,7 @@ function EventInfoSection({
   return (
     <div className="rounded-lg border p-4">
       <Flex align="center" justify="between" className="mb-2">
-        <h3 className="text-sm font-medium text-gray-700">이벤트 정보</h3>
+        <h3 className="text-sm font-medium text-gray-700">모임 정보</h3>
         {event.status === 'pending' && (
           <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
             수정
@@ -245,7 +245,7 @@ function EventInfoSection({
       </Flex>
       <dl className="space-y-1 text-sm">
         <div className="flex justify-between">
-          <dt className="text-gray-500">후보 날짜</dt>
+          <dt className="text-gray-500">목표 기간</dt>
           <dd>
             {new Date(event.eventDateStart).toLocaleDateString('ko-KR')} ~{' '}
             {new Date(event.eventDateEnd).toLocaleDateString('ko-KR')}

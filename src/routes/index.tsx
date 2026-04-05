@@ -40,9 +40,9 @@ function HomePage() {
   return (
     <VStack gap="24">
       <Flex align="center" justify="between">
-        <Heading level={1}>내 모임</Heading>
+        <Heading level={1}>모임 목록</Heading>
         <Button size="sm" onClick={() => navigate({ to: '/new' })}>
-          + 새 모임 만들기
+          + 새 모임
         </Button>
       </Flex>
 
@@ -82,7 +82,7 @@ function HomePage() {
             to="/new"
             className="mt-2 inline-block text-blue-600 hover:underline"
           >
-            새 모임 만들기
+            새 모임
           </Link>
         </div>
       )}
