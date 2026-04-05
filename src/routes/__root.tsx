@@ -34,6 +34,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <main className="mx-auto max-w-4xl px-4 py-8">
           {children}
         </main>
+        <footer className="border-t py-6 text-center text-sm text-gray-400">
+          <a href="https://www.dalestudy.com/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600">
+            DaleStudy
+          </a>
+        </footer>
         <Scripts />
       </body>
     </html>
