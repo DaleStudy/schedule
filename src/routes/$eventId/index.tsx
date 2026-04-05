@@ -11,10 +11,7 @@ import {
   getUserProfile,
   saveUserProfile,
 } from '../../lib/local-events'
-import {
-  parseAvailabilityText,
-  type ParsedSlot,
-} from '../../server/functions/parse-availability'
+import { parseAvailabilityText } from '../../server/functions/parse-availability'
 import { TimeGrid } from '../../components/time-grid'
 import { TimezoneSelector } from '../../components/timezone-selector'
 

@@ -108,11 +108,8 @@ function EventSection({ title, events }: { title: string; events: MyEvent[] }) {
         {events.map((e) => (
           <Link
             key={`${e.id}-${e.role}`}
-            to={
-              e.role === 'admin'
-                ? `/${e.id}/admin`
-                : `/${e.id}`
-            }
+            to={e.role === 'admin' ? '/$eventId/admin' : '/$eventId'}
+            params={{ eventId: e.id }}
             search={e.role === 'admin' && e.adminToken ? { token: e.adminToken } : {}}
             className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
           >

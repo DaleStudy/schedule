@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 bun run dev          # Dev server on port 3000
 bun run build        # Production build
-bun test             # Run tests (bun test, not vitest)
+bun run test         # Typecheck (tsc --noEmit) + run tests
 bun run deploy       # Build + wrangler deploy
 bun run cf-typegen   # Regenerate worker-configuration.d.ts after wrangler.jsonc changes
 bun run db:generate  # Generate Drizzle migration from schema changes

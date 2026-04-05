@@ -61,14 +61,12 @@ export function findOptimalTime(
   let cursor = rangeStart
   while (!cursor.add(durationMinutes, 'minute').isAfter(rangeEnd)) {
     let windowParticipants: Set<string> | null = null
-    let hasEmptyCell = false
 
     for (let i = 0; i < requiredCells; i++) {
       const cellKey = cursor.add(i * SLOT_MINUTES, 'minute').toISOString()
       const cellParticipants = cellMap.get(cellKey)
 
       if (!cellParticipants || cellParticipants.size === 0) {
-        hasEmptyCell = true
         windowParticipants = new Set()
         break
       }

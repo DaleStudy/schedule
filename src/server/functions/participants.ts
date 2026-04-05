@@ -93,7 +93,7 @@ export const submitAvailability = createServerFn({ method: 'POST' })
         timezone: data.timezone,
         respondedAt: nowUTC(),
       })
-      participant = { id: participantId } as typeof participant
+      participant = { id: participantId } as unknown as typeof participant
     }
 
     // D1 바인딩 파라미터 제한(100개)을 피하기 위해 10개씩 배치 삽입
