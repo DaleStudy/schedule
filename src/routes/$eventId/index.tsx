@@ -146,7 +146,6 @@ function RespondPage() {
       saveUserProfile({ name: name.trim(), email: email.trim() })
       saveLocalEvent({
         eventId: event.id,
-        title: event.title,
         role: 'participant',
         name: name.trim(),
         createdAt: new Date().toISOString(),

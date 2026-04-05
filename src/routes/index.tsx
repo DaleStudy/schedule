@@ -10,6 +10,7 @@ export const Route = createFileRoute('/')({
 
 interface EventStatus {
   id: string
+  title: string
   status: string
   confirmedStart: string | null
   confirmedEnd: string | null
@@ -62,7 +63,7 @@ function HomePage() {
                 className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
               >
                 <HStack gap="8">
-                  <span className="font-medium">{e.title}</span>
+                  <span className="font-medium">{status?.title ?? e.title ?? e.eventId}</span>
                   <span className="text-xs text-gray-400">
                     {e.role === 'admin' ? '주최' : '참여'}
                   </span>

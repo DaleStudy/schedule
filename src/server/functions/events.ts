@@ -216,6 +216,7 @@ export const getEventStatuses = createServerFn({ method: 'POST' })
     const results = await db
       .select({
         id: events.id,
+        title: events.title,
         status: events.status,
         confirmedStart: events.confirmedStart,
         confirmedEnd: events.confirmedEnd,

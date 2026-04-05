@@ -2,7 +2,7 @@ const STORAGE_KEY = 'dale-schedule-events'
 
 export interface LocalEvent {
   eventId: string
-  title: string
+  title?: string
   role: 'admin' | 'participant'
   adminToken?: string
   name?: string

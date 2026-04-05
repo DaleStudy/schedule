@@ -6,7 +6,6 @@ import {
   confirmEvent,
   updateEvent,
 } from '../../server/functions/events'
-import { saveLocalEvent, getLocalEvents } from '../../lib/local-events'
 
 interface AdminSearch {
   token: string
@@ -165,10 +164,6 @@ function EventInfoSection({
           durationMinutes,
         },
       })
-      const existing = getLocalEvents().find(e => e.eventId === event.id && e.role === 'admin')
-      if (existing) {
-        saveLocalEvent({ ...existing, title })
-      }
       setEditing(false)
       window.location.reload()
     } catch (err) {

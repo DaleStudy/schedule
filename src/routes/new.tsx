@@ -55,7 +55,6 @@ function CreateEventPage() {
       })
       saveLocalEvent({
         eventId: res.eventId,
-        title,
         role: 'admin',
         adminToken: res.adminToken,
         createdAt: new Date().toISOString(),
