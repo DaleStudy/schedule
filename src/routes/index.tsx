@@ -75,31 +75,16 @@ function HomePage() {
       </HStack>
 
       {myEvents.length > 0 ? (
-        <div className="divide-y overflow-hidden rounded-lg border">
-          {myEvents.map((e) => (
-            <Link
-              key={`${e.id}-${e.role}`}
-              to={
-                e.role === 'admin'
-                  ? `/${e.id}/admin`
-                  : `/${e.id}`
-              }
-              search={e.role === 'admin' && e.adminToken ? { token: e.adminToken } : {}}
-              className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
-            >
-              <HStack gap="8">
-                <span className="font-medium">{e.title}</span>
-                <span className="text-xs text-gray-400">
-                  {e.role === 'admin' ? '주최' : '참여'}
-                </span>
-                <StatusBadge status={e.status} confirmedEnd={e.confirmedEnd} />
-              </HStack>
-              <span className="text-xs text-gray-400">
-                {new Date(e.createdAt).toLocaleDateString('ko-KR')}
-              </span>
-            </Link>
-          ))}
-        </div>
+        <VStack align="stretch" gap="24">
+          <EventSection
+            title="주최한 모임"
+            events={myEvents.filter((e) => e.role === 'admin')}
+          />
+          <EventSection
+            title="참여한 모임"
+            events={myEvents.filter((e) => e.role === 'participant')}
+          />
+        </VStack>
       ) : email ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-gray-400">
           <p>이 이메일로 참여한 모임이 없습니다.</p>
@@ -110,6 +95,38 @@ function HomePage() {
         </div>
       )}
     </VStack>
+  )
+}
+
+function EventSection({ title, events }: { title: string; events: MyEvent[] }) {
+  if (events.length === 0) return null
+
+  return (
+    <div>
+      <Heading level={3} size={4} className="mb-2">{title}</Heading>
+      <div className="divide-y overflow-hidden rounded-lg border">
+        {events.map((e) => (
+          <Link
+            key={`${e.id}-${e.role}`}
+            to={
+              e.role === 'admin'
+                ? `/${e.id}/admin`
+                : `/${e.id}`
+            }
+            search={e.role === 'admin' && e.adminToken ? { token: e.adminToken } : {}}
+            className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
+          >
+            <HStack gap="8">
+              <span className="font-medium">{e.title}</span>
+              <StatusBadge status={e.status} confirmedEnd={e.confirmedEnd} />
+            </HStack>
+            <span className="text-xs text-gray-400">
+              {new Date(e.createdAt).toLocaleDateString('ko-KR')}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
   )
 }
 
