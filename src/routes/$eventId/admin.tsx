@@ -269,7 +269,7 @@ function CopyField({ value }: { value: string }) {
 
   return (
     <div className="flex items-center gap-2 rounded border bg-gray-50 px-3 py-2">
-      <span className="flex-1 truncate text-sm text-gray-600">{value}</span>
+      <a href={value} target="_blank" rel="noopener noreferrer" className="flex-1 truncate text-sm text-blue-600 hover:underline">{value}</a>
       <Button type="button" variant="ghost" size="sm" onClick={copy}>
         {copied ? '복사됨!' : '복사'}
       </Button>
