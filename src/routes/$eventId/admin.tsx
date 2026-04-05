@@ -76,24 +76,20 @@ function AdminDashboard() {
 
       {event.status === 'pending' && (
         <VStack align="stretch" gap="16">
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="font-medium text-blue-800">응답 현황</span>
-              <span className="text-sm text-blue-600">
-                {respondedCount}명 응답
-              </span>
+          <div className="overflow-hidden rounded-lg border border-blue-200">
+            <div className="bg-blue-50 p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="font-medium text-blue-800">응답 현황</span>
+                <span className="text-sm text-blue-600">
+                  {respondedCount}/{event.participants.length}명 응답
+                </span>
+              </div>
+              <p className="text-xs text-blue-600">
+                응답 마감:{' '}
+                {new Date(event.responseDeadlineAt).toLocaleDateString('ko-KR')}
+              </p>
             </div>
-            <p className="text-xs text-blue-600">
-              응답 마감:{' '}
-              {new Date(event.responseDeadlineAt).toLocaleDateString('ko-KR')}
-            </p>
-          </div>
-
-          {event.participants.length > 0 && (
-            <Card outline>
-              <Card.Body>
-                <Card.Title>응답자 ({respondedCount}/{event.participants.length}명)</Card.Title>
-              </Card.Body>
+            {event.participants.length > 0 && (
               <div className="divide-y">
                 {event.participants.map((p) => (
                   <div
@@ -110,8 +106,8 @@ function AdminDashboard() {
                   </div>
                 ))}
               </div>
-            </Card>
-          )}
+            )}
+          </div>
 
           {respondedCount > 0 && (
             <Button
