@@ -8,7 +8,6 @@ import {
   getParticipantSlots,
 } from '../../server/functions/participants'
 import {
-  saveLocalEvent,
   getUserProfile,
   saveUserProfile,
 } from '../../lib/local-events'
@@ -144,12 +143,6 @@ function RespondPage() {
         },
       })
       saveUserProfile({ name: name.trim(), email: email.trim() })
-      saveLocalEvent({
-        eventId: event.id,
-        role: 'participant',
-        name: name.trim(),
-        createdAt: new Date().toISOString(),
-      })
       setSubmitted(true)
     } catch (err) {
       alert('제출에 실패했습니다: ' + (err as Error).message)

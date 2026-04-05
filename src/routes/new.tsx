@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button, TextInput, Select, Label, VStack, Heading, Text } from 'daleui'
 import { createEvent } from '../server/functions/events'
-import { saveLocalEvent } from '../lib/local-events'
+import { getUserProfile, saveUserProfile } from '../lib/local-events'
 
 export const Route = createFileRoute('/new')({
   component: CreateEventPage,
@@ -16,7 +16,13 @@ function CreateEventPage() {
   const [eventWeeks, setEventWeeks] = useState(2)
   const [deadlineDaysBefore, setDeadlineDaysBefore] = useState(7)
   const [minParticipants, setMinParticipants] = useState('')
+  const [organizerEmail, setOrganizerEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    const profile = getUserProfile()
+    if (profile) setOrganizerEmail(profile.email)
+  }, [])
   const [result, setResult] = useState<{
     eventId: string
     adminToken: string
@@ -51,14 +57,12 @@ function CreateEventPage() {
           eventDateEnd: eventDateEnd.toISOString(),
           responseDeadlineAt: responseDeadlineAt.toISOString(),
           minParticipants: minParticipants ? Number(minParticipants) : undefined,
+          organizerEmail: organizerEmail.trim() || undefined,
         },
       })
-      saveLocalEvent({
-        eventId: res.eventId,
-        role: 'admin',
-        adminToken: res.adminToken,
-        createdAt: new Date().toISOString(),
-      })
+      if (organizerEmail.trim()) {
+        saveUserProfile({ email: organizerEmail.trim(), name: '' })
+      }
       setResult(res)
     } catch (err) {
       alert('일정 생성에 실패했습니다: ' + (err as Error).message)
@@ -173,6 +177,15 @@ function CreateEventPage() {
         <Text size="xs" tone="neutral" className="mt-1">
           이 인원 미만이면 모임이 성사되지 않습니다.
         </Text>
+      </Field>
+
+      <Field label="내 이메일 (선택)">
+        <TextInput
+          type="email"
+          value={organizerEmail}
+          onChange={(e) => setOrganizerEmail(e.target.value)}
+          placeholder="입력하면 모임 목록에서 조회 가능"
+        />
       </Field>
 
       <Field label="설명 (선택)">

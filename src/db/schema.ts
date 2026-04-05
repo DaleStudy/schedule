@@ -8,6 +8,7 @@ export const events = sqliteTable(
     description: text('description'),
     durationMinutes: integer('duration_minutes').notNull().default(60),
     adminToken: text('admin_token').notNull().unique(),
+    organizerEmail: text('organizer_email').notNull().default(''),
     timezone: text('timezone').notNull(),
     eventDateStart: text('event_date_start').notNull(),
     eventDateEnd: text('event_date_end').notNull(),

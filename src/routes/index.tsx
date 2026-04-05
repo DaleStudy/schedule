@@ -1,42 +1,56 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { Button, Tag, VStack, Flex, HStack, Heading } from 'daleui'
-import { getLocalEvents, type LocalEvent } from '../lib/local-events'
-import { getEventStatuses } from '../server/functions/events'
+import { Button, Tag, VStack, Flex, HStack, Heading, TextInput } from 'daleui'
+import { getUserProfile, saveUserProfile } from '../lib/local-events'
+import { getMyEvents } from '../server/functions/events'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
 })
 
-interface EventStatus {
+interface MyEvent {
   id: string
   title: string
   status: string
+  role: 'admin' | 'participant'
+  adminToken: string | null
   confirmedStart: string | null
   confirmedEnd: string | null
-  eventDateEnd: string
+  createdAt: string
 }
 
 function HomePage() {
   const navigate = useNavigate()
-  const [localEvents, setLocalEvents] = useState<LocalEvent[]>([])
-  const [statuses, setStatuses] = useState<Map<string, EventStatus>>(new Map())
+  const [email, setEmail] = useState('')
+  const [myEvents, setMyEvents] = useState<MyEvent[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    const events = getLocalEvents()
-    setLocalEvents(events)
-
-    if (events.length > 0) {
-      const ids = [...new Set(events.map((e) => e.eventId))]
-      getEventStatuses({ data: { eventIds: ids } }).then((results) => {
-        const map = new Map<string, EventStatus>()
-        for (const r of results) {
-          map.set(r.id, r)
-        }
-        setStatuses(map)
-      })
+    const profile = getUserProfile()
+    if (profile?.email) {
+      setEmail(profile.email)
+      loadEvents(profile.email)
     }
   }, [])
+
+  const loadEvents = async (emailToSearch: string) => {
+    if (!emailToSearch.trim()) return
+    setIsLoading(true)
+    try {
+      const results = await getMyEvents({ data: { email: emailToSearch.trim() } })
+      setMyEvents(results)
+    } catch {
+      setMyEvents([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSearch = () => {
+    if (!email.trim()) return
+    saveUserProfile({ email: email.trim(), name: '' })
+    loadEvents(email.trim())
+  }
 
   return (
     <VStack align="stretch" gap="24">
@@ -47,56 +61,63 @@ function HomePage() {
         </Button>
       </Flex>
 
-      {localEvents.length > 0 ? (
+      <HStack gap="8">
+        <TextInput
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="이메일로 내 모임 찾기"
+          className="flex-1"
+        />
+        <Button size="sm" onClick={handleSearch} disabled={!email.trim() || isLoading}>
+          {isLoading ? '검색 중...' : '검색'}
+        </Button>
+      </HStack>
+
+      {myEvents.length > 0 ? (
         <div className="divide-y overflow-hidden rounded-lg border">
-          {localEvents.map((e) => {
-            const status = statuses.get(e.eventId)
-            return (
-              <Link
-                key={`${e.eventId}-${e.role}`}
-                to={
-                  e.role === 'admin'
-                    ? `/${e.eventId}/admin`
-                    : `/${e.eventId}`
-                }
-                search={e.role === 'admin' ? { token: e.adminToken! } : {}}
-                className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
-              >
-                <HStack gap="8">
-                  <span className="font-medium">{status?.title ?? e.title ?? e.eventId}</span>
-                  <span className="text-xs text-gray-400">
-                    {e.role === 'admin' ? '주최' : '참여'}
-                  </span>
-                  {status && <StatusBadge status={status} />}
-                </HStack>
+          {myEvents.map((e) => (
+            <Link
+              key={`${e.id}-${e.role}`}
+              to={
+                e.role === 'admin'
+                  ? `/${e.id}/admin`
+                  : `/${e.id}`
+              }
+              search={e.role === 'admin' && e.adminToken ? { token: e.adminToken } : {}}
+              className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
+            >
+              <HStack gap="8">
+                <span className="font-medium">{e.title}</span>
                 <span className="text-xs text-gray-400">
-                  {new Date(e.createdAt).toLocaleDateString('ko-KR')}
+                  {e.role === 'admin' ? '주최' : '참여'}
                 </span>
-              </Link>
-            )
-          })}
+                <StatusBadge status={e.status} confirmedEnd={e.confirmedEnd} />
+              </HStack>
+              <span className="text-xs text-gray-400">
+                {new Date(e.createdAt).toLocaleDateString('ko-KR')}
+              </span>
+            </Link>
+          ))}
+        </div>
+      ) : email ? (
+        <div className="rounded-lg border border-dashed p-8 text-center text-gray-400">
+          <p>이 이메일로 참여한 모임이 없습니다.</p>
         </div>
       ) : (
         <div className="rounded-lg border border-dashed p-8 text-center text-gray-400">
-          <p>아직 참여한 모임이 없습니다.</p>
-          <Link
-            to="/new"
-            className="mt-2 inline-block text-blue-600 hover:underline"
-          >
-            새 모임
-          </Link>
+          <p>이메일을 입력하면 참여한 모임을 볼 수 있습니다.</p>
         </div>
       )}
     </VStack>
   )
 }
 
-function StatusBadge({ status }: { status: EventStatus }) {
-  const now = new Date()
+function StatusBadge({ status, confirmedEnd }: { status: string; confirmedEnd: string | null }) {
   const isPast =
-    status.status === 'confirmed' &&
-    status.confirmedEnd &&
-    new Date(status.confirmedEnd) < now
+    status === 'confirmed' &&
+    confirmedEnd &&
+    new Date(confirmedEnd) < new Date()
 
   if (isPast) {
     return <Tag tone="neutral">종료</Tag>
@@ -114,8 +135,8 @@ function StatusBadge({ status }: { status: EventStatus }) {
   }
 
   return (
-    <Tag tone={tones[status.status]}>
-      {labels[status.status] ?? status.status}
+    <Tag tone={tones[status]}>
+      {labels[status] ?? status}
     </Tag>
   )
 }

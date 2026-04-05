@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { env } from 'cloudflare:workers'
-import { eq, and, inArray } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import { getDb } from '../../db'
 import { events, participants, availabilitySlots } from '../../db/schema'
 import { generateEventId, generateAdminToken } from '../../lib/tokens'
@@ -17,6 +17,7 @@ export const createEvent = createServerFn({ method: 'POST' })
       eventDateEnd: string
       responseDeadlineAt: string
       minParticipants?: number
+      organizerEmail?: string
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -30,6 +31,7 @@ export const createEvent = createServerFn({ method: 'POST' })
       description: data.description,
       durationMinutes: data.durationMinutes,
       adminToken,
+      organizerEmail: data.organizerEmail || '',
       timezone: data.timezone,
       eventDateStart: data.eventDateStart,
       eventDateEnd: data.eventDateEnd,
@@ -207,24 +209,64 @@ export const updateEvent = createServerFn({ method: 'POST' })
     return { success: true }
   })
 
-export const getEventStatuses = createServerFn({ method: 'POST' })
-  .inputValidator((input: { eventIds: string[] }) => input)
+export const getMyEvents = createServerFn({ method: 'POST' })
+  .inputValidator((input: { email: string }) => input)
   .handler(async ({ data }) => {
-    if (data.eventIds.length === 0) return []
+    if (!data.email) return []
     const db = getDb(env.DB)
 
-    const results = await db
+    // 주최자 이벤트
+    const organizerEvents = await db
+      .select({
+        id: events.id,
+        title: events.title,
+        status: events.status,
+        adminToken: events.adminToken,
+        confirmedStart: events.confirmedStart,
+        confirmedEnd: events.confirmedEnd,
+        createdAt: events.createdAt,
+      })
+      .from(events)
+      .where(eq(events.organizerEmail, data.email))
+      .all()
+
+    // 참여자 이벤트
+    const participantRows = await db
       .select({
         id: events.id,
         title: events.title,
         status: events.status,
         confirmedStart: events.confirmedStart,
         confirmedEnd: events.confirmedEnd,
-        eventDateEnd: events.eventDateEnd,
+        createdAt: events.createdAt,
       })
-      .from(events)
-      .where(inArray(events.id, data.eventIds))
+      .from(participants)
+      .innerJoin(events, eq(participants.eventId, events.id))
+      .where(eq(participants.email, data.email))
       .all()
 
+    const organizerIds = new Set(organizerEvents.map((e) => e.id))
+
+    const results: Array<{
+      id: string
+      title: string
+      status: string
+      role: 'admin' | 'participant'
+      adminToken: string | null
+      confirmedStart: string | null
+      confirmedEnd: string | null
+      createdAt: string
+    }> = []
+
+    for (const e of organizerEvents) {
+      results.push({ ...e, role: 'admin' })
+    }
+    for (const e of participantRows) {
+      if (!organizerIds.has(e.id)) {
+        results.push({ ...e, role: 'participant', adminToken: null })
+      }
+    }
+
+    results.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     return results
   })

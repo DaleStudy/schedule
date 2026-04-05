@@ -15,6 +15,7 @@ function createTestDb() {
       description TEXT,
       duration_minutes INTEGER NOT NULL DEFAULT 60,
       admin_token TEXT NOT NULL UNIQUE,
+      organizer_email TEXT NOT NULL DEFAULT '',
       timezone TEXT NOT NULL,
       event_date_start TEXT NOT NULL,
       event_date_end TEXT NOT NULL,
@@ -48,12 +49,13 @@ function createTestDb() {
   return drizzle(sqlite, { schema })
 }
 
-function seedEvent(db: ReturnType<typeof createTestDb>, id: string) {
+function seedEvent(db: ReturnType<typeof createTestDb>, id: string, organizerEmail = '') {
   const now = new Date().toISOString()
   db.insert(events).values({
     id,
     title: 'Test Event',
     adminToken: `admin-${id}`,
+    organizerEmail,
     timezone: 'Asia/Seoul',
     eventDateStart: '2026-04-14T00:00:00Z',
     eventDateEnd: '2026-04-20T00:00:00Z',
@@ -193,5 +195,40 @@ describe('이벤트 수정', () => {
 
     const unchanged = db.select().from(events).where(eq(events.id, 'event-1')).all()
     expect(unchanged[0].title).toBe('Test Event')
+  })
+})
+
+describe('organizerEmail 기반 조회', () => {
+  let db: ReturnType<typeof createTestDb>
+
+  beforeEach(() => {
+    db = createTestDb()
+    seedEvent(db, 'event-1', 'dale@test.com')
+    seedEvent(db, 'event-2', 'sam@test.com')
+    seedEvent(db, 'event-3')
+    seedParticipant(db, 'p1', 'event-2', '달레', 'dale@test.com')
+    seedParticipant(db, 'p2', 'event-3', '달레', 'dale@test.com')
+  })
+
+  it('organizerEmail로 주최 이벤트 조회', () => {
+    const result = db.select().from(events).where(eq(events.organizerEmail, 'dale@test.com')).all()
+    expect(result).toHaveLength(1)
+    expect(result[0].id).toBe('event-1')
+  })
+
+  it('참여자 이메일로 참여 이벤트 조회', () => {
+    const result = db
+      .select({ eventId: participants.eventId })
+      .from(participants)
+      .where(eq(participants.email, 'dale@test.com'))
+      .all()
+    expect(result).toHaveLength(2)
+    expect(result.map((r) => r.eventId).sort()).toEqual(['event-2', 'event-3'])
+  })
+
+  it('이메일 없는 이벤트는 organizerEmail 조회에 포함되지 않음', () => {
+    const result = db.select().from(events).where(eq(events.organizerEmail, '')).all()
+    expect(result).toHaveLength(1)
+    expect(result[0].id).toBe('event-3')
   })
 })
