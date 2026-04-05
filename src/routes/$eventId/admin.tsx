@@ -1,11 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Button, TextInput, Select, Label, VStack, HStack, Flex, Heading } from 'daleui'
+import { Button, TextInput, Select, Label, VStack, HStack, Flex, Heading, Text } from 'daleui'
 import {
   getEventByAdminToken,
   confirmEvent,
   updateEvent,
 } from '../../server/functions/events'
+import { saveLocalEvent, getLocalEvents } from '../../lib/local-events'
 
 interface AdminSearch {
   token: string
@@ -49,7 +50,7 @@ function AdminDashboard() {
     <VStack gap="24">
       <div>
         <Heading level={1}>{event.title}</Heading>
-        <p className="text-sm text-gray-500">주최자 대시보드</p>
+        <Text size="sm" tone="neutral">주최자 대시보드</Text>
       </div>
 
       {event.status === 'confirmed' && event.confirmedStart && (
@@ -107,12 +108,10 @@ function AdminDashboard() {
                 key={p.id}
                 className="flex items-center justify-between px-4 py-3"
               >
-                <span className="font-medium">{p.name}</span>
-                <span
-                  className={`text-xs ${p.respondedAt ? 'text-green-600' : 'text-gray-400'}`}
-                >
+                <Text as="span" weight="medium">{p.name}</Text>
+                <Text as="span" size="xs" tone={p.respondedAt ? 'success' : 'neutral'}>
                   {p.respondedAt ? '응답 완료' : '대기 중'}
-                </span>
+                </Text>
               </div>
             ))}
           </div>
@@ -166,6 +165,10 @@ function EventInfoSection({
           durationMinutes,
         },
       })
+      const existing = getLocalEvents().find(e => e.eventId === event.id && e.role === 'admin')
+      if (existing) {
+        saveLocalEvent({ ...existing, title })
+      }
       setEditing(false)
       window.location.reload()
     } catch (err) {

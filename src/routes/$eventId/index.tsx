@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useMemo, useEffect } from 'react'
-import { Button, TextInput, Label, VStack, HStack, Heading } from 'daleui'
+import { Button, TextInput, Label, VStack, HStack, Heading, Text } from 'daleui'
 import { dayjs } from '../../lib/time'
 import { getEvent } from '../../server/functions/events'
 import {
@@ -188,9 +188,9 @@ function RespondPage() {
       <VStack gap="16">
         <Heading level={1}>{event.title}</Heading>
         <div className="rounded-lg border border-red-200 bg-red-50 p-6">
-          <p className="text-red-700">
+          <Text tone="danger">
             참여 가능한 공통 시간을 찾을 수 없어 일정이 취소되었습니다.
-          </p>
+          </Text>
         </div>
       </VStack>
     )
@@ -205,9 +205,9 @@ function RespondPage() {
           <h2 className="mb-2 text-lg font-semibold text-green-800">
             응답이 제출되었습니다!
           </h2>
-          <p className="text-sm text-green-700">
+          <Text size="sm" tone="success">
             응답 마감일이 되면 최적 시간이 자동으로 확정됩니다.
-          </p>
+          </Text>
         </div>
         <Button
           variant="ghost"
@@ -230,7 +230,7 @@ function RespondPage() {
         <div>
           <Heading level={1}>{event.title}</Heading>
           {event.description && (
-            <p className="mt-1 text-gray-600">{event.description}</p>
+            <Text tone="neutral" className="mt-1">{event.description}</Text>
           )}
         </div>
 
@@ -292,7 +292,7 @@ function RespondPage() {
       </div>
 
       <div className="text-sm">
-        <span className="font-medium text-gray-700">시간대: </span>
+        <Text as="span" weight="medium" tone="neutral">시간대: </Text>
         <TimezoneSelector value={timezone} onChange={setTimezone} />
       </div>
 
@@ -315,18 +315,18 @@ function RespondPage() {
             {isParsing ? '분석 중...' : '분석'}
           </Button>
         </HStack>
-        <p className="mt-1 text-xs text-gray-400">
+        <Text size="xs" tone="neutral" className="mt-1">
           실험 기능: AI 분석은 시간이 걸릴 수 있고 정확하지 않을 수 있습니다.
           결과가 맞지 않으면 아래 캘린더에서 직접 조정하세요.
-        </p>
+        </Text>
       </Field>
 
       <div>
-        <p className="mb-2 text-xs text-gray-500">
+        <Text size="xs" tone="neutral" className="mb-2">
           셀을 클릭/드래그하여 가능한 시간을 선택하세요.
           {heatmap && heatmap.size > 0 &&
             ' 파란색은 다른 참여자가 가능한 시간입니다.'}
-        </p>
+        </Text>
         <TimeGrid
           eventDateStart={event.eventDateStart}
           eventDateEnd={event.eventDateEnd}
@@ -340,9 +340,9 @@ function RespondPage() {
 
       {slots.length > 0 && (
         <div className="rounded-lg border bg-gray-50 p-4">
-          <p className="text-sm text-gray-700">
+          <Text size="sm" tone="neutral">
             {slots.filter((s) => s.status === 'available').length}개 시간대 선택됨
-          </p>
+          </Text>
         </div>
       )}
 

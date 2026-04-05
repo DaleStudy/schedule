@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Button, TextInput, Select, Label, VStack, Heading } from 'daleui'
+import { Button, TextInput, Select, Label, VStack, Heading, Text } from 'daleui'
 import { createEvent } from '../server/functions/events'
 import { saveLocalEvent } from '../lib/local-events'
 
@@ -79,26 +79,26 @@ function CreateEventPage() {
           <h2 className="mb-2 text-lg font-semibold text-green-800">
             일정이 생성되었습니다!
           </h2>
-          <p className="text-sm text-green-700">
+          <Text size="sm" tone="success">
             아래 링크를 참여자에게 공유하세요.
-          </p>
+          </Text>
         </div>
 
         <VStack gap="16">
           <div>
             <Label labelText="공유 링크" />
             <CopyField value={respondUrl} />
-            <p className="mt-1 text-xs text-gray-500">
+            <Text size="xs" tone="neutral" className="mt-1">
               이 링크 하나로 모든 참여자가 응답할 수 있습니다.
-            </p>
+            </Text>
           </div>
 
           <div>
             <Label labelText="주최자 관리 링크" />
             <CopyField value={adminUrl} />
-            <p className="mt-1 text-xs text-gray-500">
+            <Text size="xs" tone="neutral" className="mt-1">
               이 링크는 본인만 보관하세요.
-            </p>
+            </Text>
           </div>
         </VStack>
 
@@ -157,9 +157,9 @@ function CreateEventPage() {
             <option value="7">1주 전 확정</option>
             <option value="14">2주 전 확정</option>
           </Select>
-          <p className="mt-1 text-xs text-gray-500">
+          <Text size="xs" tone="neutral" className="mt-1">
             모임 시작일 기준으로 이 기간 전에 자동 확정됩니다.
-          </p>
+          </Text>
         </Field>
       </div>
 
@@ -171,9 +171,9 @@ function CreateEventPage() {
           onChange={(e) => setMinParticipants(e.target.value)}
           placeholder="미설정 시 인원 제한 없음"
         />
-        <p className="mt-1 text-xs text-gray-500">
+        <Text size="xs" tone="neutral" className="mt-1">
           이 인원 미만이면 모임이 성사되지 않습니다.
-        </p>
+        </Text>
       </Field>
 
       <Field label="설명 (선택)">
