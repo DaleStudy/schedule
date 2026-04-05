@@ -100,6 +100,7 @@ export const getEventByAdminToken = createServerFn({ method: 'GET' })
       ...event,
       participants: eventParticipants.map((p) => ({
         id: p.id,
+        email: p.email,
         name: p.name,
         respondedAt: p.respondedAt,
         timezone: p.timezone,
