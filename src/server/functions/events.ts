@@ -220,31 +220,28 @@ export const getMyEvents = createServerFn({ method: 'POST' })
     if (!data.email) return []
     const db = getDb(env.DB)
 
+    const eventFields = {
+      id: events.id,
+      title: events.title,
+      status: events.status,
+      eventDateStart: events.eventDateStart,
+      eventDateEnd: events.eventDateEnd,
+      responseDeadlineAt: events.responseDeadlineAt,
+      confirmedStart: events.confirmedStart,
+      confirmedEnd: events.confirmedEnd,
+      createdAt: events.createdAt,
+    }
+
     // 주최자 이벤트
     const organizerEvents = await db
-      .select({
-        id: events.id,
-        title: events.title,
-        status: events.status,
-        adminToken: events.adminToken,
-        confirmedStart: events.confirmedStart,
-        confirmedEnd: events.confirmedEnd,
-        createdAt: events.createdAt,
-      })
+      .select({ ...eventFields, adminToken: events.adminToken })
       .from(events)
       .where(eq(events.organizerEmail, data.email))
       .all()
 
     // 참여자 이벤트
     const participantRows = await db
-      .select({
-        id: events.id,
-        title: events.title,
-        status: events.status,
-        confirmedStart: events.confirmedStart,
-        confirmedEnd: events.confirmedEnd,
-        createdAt: events.createdAt,
-      })
+      .select(eventFields)
       .from(participants)
       .innerJoin(events, eq(participants.eventId, events.id))
       .where(eq(participants.email, data.email))
@@ -252,16 +249,21 @@ export const getMyEvents = createServerFn({ method: 'POST' })
 
     const organizerIds = new Set(organizerEvents.map((e) => e.id))
 
-    const results: Array<{
+    type EventResult = {
       id: string
       title: string
       status: string
       role: 'admin' | 'participant'
       adminToken: string | null
+      eventDateStart: string
+      eventDateEnd: string
+      responseDeadlineAt: string
       confirmedStart: string | null
       confirmedEnd: string | null
       createdAt: string
-    }> = []
+    }
+
+    const results: EventResult[] = []
 
     for (const e of organizerEvents) {
       results.push({ ...e, role: 'admin' })

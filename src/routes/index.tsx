@@ -14,6 +14,9 @@ interface MyEvent {
   status: string
   role: 'admin' | 'participant'
   adminToken: string | null
+  eventDateStart: string
+  eventDateEnd: string
+  responseDeadlineAt: string
   confirmedStart: string | null
   confirmedEnd: string | null
   createdAt: string
@@ -111,19 +114,40 @@ function EventSection({ title, events }: { title: string; events: MyEvent[] }) {
             to={e.role === 'admin' ? '/$eventId/admin' : '/$eventId'}
             params={{ eventId: e.id }}
             search={e.role === 'admin' && e.adminToken ? { token: e.adminToken } : {}}
-            className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
+            className="block px-4 py-3 hover:bg-gray-50"
           >
-            <HStack gap="8">
-              <span className="font-medium">{e.title}</span>
-              <StatusBadge status={e.status} confirmedEnd={e.confirmedEnd} />
-            </HStack>
-            <span className="text-xs text-gray-400">
-              {new Date(e.createdAt).toLocaleDateString('ko-KR')}
-            </span>
+            <Flex align="center" justify="between">
+              <HStack gap="8">
+                <span className="font-medium">{e.title}</span>
+                <StatusBadge status={e.status} confirmedEnd={e.confirmedEnd} />
+              </HStack>
+              <EventDates event={e} />
+            </Flex>
           </Link>
         ))}
       </div>
     </div>
+  )
+}
+
+function EventDates({ event: e }: { event: MyEvent }) {
+  const fmt = (d: string) => new Date(d).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
+
+  if (e.status === 'confirmed' && e.confirmedStart) {
+    return (
+      <span className="text-xs text-gray-500">
+        {new Date(e.confirmedStart).toLocaleDateString('ko-KR', {
+          month: 'short', day: 'numeric', weekday: 'short',
+          hour: '2-digit', minute: '2-digit',
+        })}
+      </span>
+    )
+  }
+
+  return (
+    <span className="text-xs text-gray-400">
+      {fmt(e.eventDateStart)} ~ {fmt(e.eventDateEnd)}
+    </span>
   )
 }
 
