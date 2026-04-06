@@ -18,6 +18,7 @@ todos.json
 
 # Test screenshots
 *.png
+!public/*.png
 .playwright-mcp/
 
 # Generated
