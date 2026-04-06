@@ -13,6 +13,7 @@ export const Route = createRootRoute({
       { property: 'og:type', content: 'website' },
       { property: 'og:title', content: 'DaleSchedule' },
       { property: 'og:description', content: '모임 일정을 쉽게 조율하세요' },
+      { property: 'og:image', content: 'https://schedule.dalestudy.com/og-image.svg' },
     ],
     links: [
       { rel: 'stylesheet', href: appCss },

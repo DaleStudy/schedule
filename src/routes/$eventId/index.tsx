@@ -24,8 +24,9 @@ export const Route = createFileRoute('/$eventId/')({
     return {
       meta: [
         { title: `${loaderData.title} - DaleSchedule` },
-        { property: 'og:title', content: loaderData.title },
+        { property: 'og:title', content: `${loaderData.title} - DaleSchedule` },
         { property: 'og:description', content: `${loaderData.durationMinutes}분 모임 | 가능한 시간을 알려주세요` },
+        { property: 'og:image', content: 'https://schedule.dalestudy.com/og-image.svg' },
       ],
     }
   },
