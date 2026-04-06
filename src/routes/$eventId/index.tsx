@@ -19,6 +19,16 @@ export const Route = createFileRoute('/$eventId/')({
   loader: async ({ params }) => {
     return getEvent({ data: { eventId: params.eventId } })
   },
+  head: ({ loaderData }) => {
+    if (!loaderData) return {}
+    return {
+      meta: [
+        { title: `${loaderData.title} - DaleSchedule` },
+        { property: 'og:title', content: loaderData.title },
+        { property: 'og:description', content: `${loaderData.durationMinutes}분 모임 | 가능한 시간을 알려주세요` },
+      ],
+    }
+  },
   component: RespondPage,
 })
 

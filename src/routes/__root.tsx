@@ -9,6 +9,10 @@ export const Route = createRootRoute({
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { title: 'DaleSchedule' },
+      { property: 'og:site_name', content: 'DaleSchedule' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:title', content: 'DaleSchedule' },
+      { property: 'og:description', content: '모임 일정을 쉽게 조율하세요' },
     ],
     links: [
       { rel: 'stylesheet', href: appCss },
