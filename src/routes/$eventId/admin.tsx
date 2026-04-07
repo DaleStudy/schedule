@@ -5,7 +5,9 @@ import { Copy, Check, SquarePen } from 'lucide-react'
 import {
   getEventByAdminToken,
   confirmEvent,
+  getCandidateTimes,
 } from '../../server/functions/events'
+import type { OptimalResult } from '../../lib/optimal-time'
 import { TimeGrid } from '../../components/time-grid'
 import { TimezoneSelector } from '../../components/timezone-selector'
 import { dayjs } from '../../lib/time'
@@ -29,6 +31,8 @@ function AdminDashboard() {
   const event = Route.useLoaderData()
   const { token } = Route.useSearch()
   const [isConfirming, setIsConfirming] = useState(false)
+  const [isLoadingCandidates, setIsLoadingCandidates] = useState(false)
+  const [candidates, setCandidates] = useState<OptimalResult[] | null>(null)
   const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone
   const [timezone, setTimezone] = useState(detectedTz)
 
@@ -104,12 +108,34 @@ function AdminDashboard() {
     return result.sort((a, b) => a.overlapPercent - b.overlapPercent)
   }, [event.slots, event.participants, respondedCount, heatmap, timezone])
 
-  const handleConfirm = async () => {
-    if (!confirm('현재 응답을 기반으로 최적 시간을 확정하시겠습니까?')) return
+  const handleShowCandidates = async () => {
+    setIsLoadingCandidates(true)
+    try {
+      const results = await getCandidateTimes({
+        data: { eventId: event.id, adminToken: token },
+      })
+      if (results.length === 0) {
+        alert('참여 가능한 공통 시간을 찾을 수 없습니다.')
+        return
+      }
+      if (results.length === 1) {
+        await handleConfirm(results[0].start, results[0].end)
+        return
+      }
+      setCandidates(results)
+    } catch (err) {
+      alert((err as Error).message)
+    } finally {
+      setIsLoadingCandidates(false)
+    }
+  }
+
+  const handleConfirm = async (start: string, end: string) => {
+    if (!confirm('이 시간으로 확정하시겠습니까?')) return
     setIsConfirming(true)
     try {
       await confirmEvent({
-        data: { eventId: event.id, adminToken: token },
+        data: { eventId: event.id, adminToken: token, confirmedStart: start, confirmedEnd: end },
       })
       window.location.reload()
     } catch (err) {
@@ -227,15 +253,62 @@ function AdminDashboard() {
             </div>
           )}
 
-          {respondedCount > 0 && (
+          {respondedCount > 0 && !candidates && (
             <Button
               fullWidth
-              onClick={handleConfirm}
-              disabled={isConfirming}
-              loading={isConfirming}
+              onClick={handleShowCandidates}
+              disabled={isLoadingCandidates || isConfirming}
+              loading={isLoadingCandidates}
             >
-              {isConfirming ? '확정 중...' : '지금 확정'}
+              {isLoadingCandidates ? '후보 탐색 중...' : '지금 확정'}
             </Button>
+          )}
+
+          {candidates && candidates.length > 1 && (
+            <div className="space-y-3">
+              <div>
+                <Text weight="medium">확정할 시간을 선택하세요</Text>
+                <Text size="xs" tone="neutral">
+                  참여 가능 인원이 많은 순서입니다.
+                </Text>
+              </div>
+              {candidates.map((c, i) => (
+                <button
+                  key={c.start}
+                  onClick={() => handleConfirm(c.start, c.end)}
+                  disabled={isConfirming}
+                  className="w-full rounded-lg border p-4 text-left hover:border-blue-400 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                >
+                  <Flex align="center" justify="between">
+                    <div>
+                      <Text weight="medium">
+                        {i + 1}. {new Date(c.start).toLocaleDateString('ko-KR', {
+                          month: 'long', day: 'numeric', weekday: 'short',
+                        })}{' '}
+                        {new Date(c.start).toLocaleTimeString('ko-KR', {
+                          hour: '2-digit', minute: '2-digit',
+                        })}
+                        {' ~ '}
+                        {new Date(c.end).toLocaleTimeString('ko-KR', {
+                          hour: '2-digit', minute: '2-digit',
+                        })}
+                      </Text>
+                    </div>
+                    <Text size="sm" tone="success">
+                      {c.availableCount}/{c.totalParticipants}명 가능
+                    </Text>
+                  </Flex>
+                </button>
+              ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                fullWidth
+                onClick={() => setCandidates(null)}
+              >
+                취소
+              </Button>
+            </div>
           )}
         </VStack>
       )}

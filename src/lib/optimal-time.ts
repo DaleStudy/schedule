@@ -137,3 +137,92 @@ export function findOptimalTime(
 
   return null
 }
+
+/**
+ * 겹치지 않는 상위 후보 시간대를 최대 maxResults개 반환한다.
+ * 참여 가능 인원이 많은 순서로 정렬.
+ */
+export function findTopCandidates(
+  slots: AvailabilitySlot[],
+  durationMinutes: number,
+  eventDateStart: string,
+  eventDateEnd: string,
+  totalParticipants: number,
+  maxResults = 5,
+): OptimalResult[] {
+  const availableSlots = slots.filter((s) => s.status === 'available')
+  if (availableSlots.length === 0) return []
+
+  const rangeStart = dayjs.utc(eventDateStart)
+  const rangeEnd = dayjs.utc(eventDateEnd)
+
+  // 셀 단위 가용성 맵
+  const cellMap = new Map<string, Set<string>>()
+  for (const slot of availableSlots) {
+    let cursor = dayjs.utc(slot.startAt)
+    const end = dayjs.utc(slot.endAt)
+    while (cursor.isBefore(end)) {
+      const key = cursor.toISOString()
+      if (!cellMap.has(key)) cellMap.set(key, new Set())
+      cellMap.get(key)!.add(slot.participantId)
+      cursor = cursor.add(SLOT_MINUTES, 'minute')
+    }
+  }
+
+  const requiredCells = Math.ceil(durationMinutes / SLOT_MINUTES)
+
+  // 모든 윈도우 점수 계산
+  const scored: Array<{ start: string; end: string; count: number }> = []
+  let cursor = rangeStart
+  while (!cursor.add(durationMinutes, 'minute').isAfter(rangeEnd)) {
+    let windowParticipants: Set<string> | null = null
+
+    for (let i = 0; i < requiredCells; i++) {
+      const cellKey = cursor.add(i * SLOT_MINUTES, 'minute').toISOString()
+      const cellP = cellMap.get(cellKey)
+      if (!cellP || cellP.size === 0) {
+        windowParticipants = new Set()
+        break
+      }
+      if (windowParticipants === null) {
+        windowParticipants = new Set(cellP)
+      } else {
+        for (const p of windowParticipants) {
+          if (!cellP.has(p)) windowParticipants.delete(p)
+        }
+      }
+    }
+
+    const count = windowParticipants?.size ?? 0
+    if (count > 0) {
+      scored.push({
+        start: cursor.toISOString(),
+        end: cursor.add(durationMinutes, 'minute').toISOString(),
+        count,
+      })
+    }
+    cursor = cursor.add(SLOT_MINUTES, 'minute')
+  }
+
+  // 참여자 수 내림차순, 같으면 빠른 시간 우선
+  scored.sort((a, b) => b.count - a.count || a.start.localeCompare(b.start))
+
+  // 겹치지 않는 상위 후보 선택
+  const results: OptimalResult[] = []
+  for (const s of scored) {
+    if (results.length >= maxResults) break
+    const overlaps = results.some(
+      (r) => s.start < r.end && s.end > r.start,
+    )
+    if (!overlaps) {
+      results.push({
+        start: s.start,
+        end: s.end,
+        availableCount: s.count,
+        totalParticipants,
+      })
+    }
+  }
+
+  return results
+}

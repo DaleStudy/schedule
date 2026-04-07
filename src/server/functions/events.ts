@@ -123,11 +123,50 @@ export const getEventByAdminToken = createServerFn({ method: 'GET' })
     }
   })
 
+export const getCandidateTimes = createServerFn({ method: 'POST' })
+  .inputValidator(
+    (input: { eventId: string; adminToken: string }) => input,
+  )
+  .handler(async ({ data }) => {
+    const db = getDb(env.DB)
+
+    const event = await db.query.events.findFirst({
+      where: and(
+        eq(events.id, data.eventId),
+        eq(events.adminToken, data.adminToken),
+      ),
+    })
+    if (!event) throw new Error('Event not found or unauthorized')
+
+    const { findTopCandidates } = await import('../../lib/optimal-time')
+    const allSlots = await db.query.availabilitySlots.findMany({
+      where: eq(availabilitySlots.eventId, data.eventId),
+    })
+    const allParticipants = await db.query.participants.findMany({
+      where: eq(participants.eventId, data.eventId),
+    })
+
+    return findTopCandidates(
+      allSlots.map((s) => ({
+        participantId: s.participantId,
+        startAt: s.startAt,
+        endAt: s.endAt,
+        status: s.status as 'available' | 'unavailable',
+      })),
+      event.durationMinutes,
+      event.eventDateStart,
+      event.eventDateEnd,
+      allParticipants.length,
+    )
+  })
+
 export const confirmEvent = createServerFn({ method: 'POST' })
   .inputValidator(
     (input: {
       eventId: string
       adminToken: string
+      confirmedStart?: string
+      confirmedEnd?: string
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -141,50 +180,58 @@ export const confirmEvent = createServerFn({ method: 'POST' })
     })
     if (!event) throw new Error('Event not found or unauthorized')
 
-    // 최적 시간 계산
-    const { findOptimalTime } = await import('../../lib/optimal-time')
-    const allSlots = await db.query.availabilitySlots.findMany({
-      where: eq(availabilitySlots.eventId, data.eventId),
-    })
-    const allParticipants = await db.query.participants.findMany({
-      where: eq(participants.eventId, data.eventId),
-    })
+    let start = data.confirmedStart
+    let end = data.confirmedEnd
 
-    const optimal = findOptimalTime(
-      allSlots.map((s) => ({
-        participantId: s.participantId,
-        startAt: s.startAt,
-        endAt: s.endAt,
-        status: s.status as 'available' | 'unavailable',
-      })),
-      event.durationMinutes,
-      event.eventDateStart,
-      event.eventDateEnd,
-      allParticipants.length,
-    )
+    // 시간이 지정되지 않으면 자동 최적 시간 계산
+    if (!start || !end) {
+      const { findOptimalTime } = await import('../../lib/optimal-time')
+      const allSlots = await db.query.availabilitySlots.findMany({
+        where: eq(availabilitySlots.eventId, data.eventId),
+      })
+      const allParticipants = await db.query.participants.findMany({
+        where: eq(participants.eventId, data.eventId),
+      })
 
-    if (!optimal) throw new Error('참여 가능한 공통 시간을 찾을 수 없습니다.')
-
-    if (
-      event.minParticipants &&
-      optimal.availableCount < event.minParticipants
-    ) {
-      throw new Error(
-        `최소 ${event.minParticipants}명이 참여해야 하지만, 최적 시간에 ${optimal.availableCount}명만 가능합니다.`,
+      const optimal = findOptimalTime(
+        allSlots.map((s) => ({
+          participantId: s.participantId,
+          startAt: s.startAt,
+          endAt: s.endAt,
+          status: s.status as 'available' | 'unavailable',
+        })),
+        event.durationMinutes,
+        event.eventDateStart,
+        event.eventDateEnd,
+        allParticipants.length,
       )
+
+      if (!optimal) throw new Error('참여 가능한 공통 시간을 찾을 수 없습니다.')
+
+      if (
+        event.minParticipants &&
+        optimal.availableCount < event.minParticipants
+      ) {
+        throw new Error(
+          `최소 ${event.minParticipants}명이 참여해야 하지만, 최적 시간에 ${optimal.availableCount}명만 가능합니다.`,
+        )
+      }
+
+      start = optimal.start
+      end = optimal.end
     }
 
     await db
       .update(events)
       .set({
         status: 'confirmed',
-        confirmedStart: optimal.start,
-        confirmedEnd: optimal.end,
+        confirmedStart: start,
+        confirmedEnd: end,
         updatedAt: nowUTC(),
       })
       .where(eq(events.id, data.eventId))
 
-    return { success: true, optimal }
+    return { success: true }
   })
 
 export const updateEvent = createServerFn({ method: 'POST' })
