@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState, useMemo, useEffect } from 'react'
 import { Button, TextInput, Label, Card, VStack, HStack, Heading, Text } from 'daleui'
 import { dayjs } from '../../lib/time'
@@ -10,6 +10,7 @@ import {
 import {
   getUserProfile,
   saveUserProfile,
+  getAdminToken,
 } from '../../lib/local-events'
 import { parseAvailabilityText } from '../../server/functions/parse-availability'
 import { TimeGrid } from '../../components/time-grid'
@@ -53,13 +54,16 @@ function RespondPage() {
     Array<{ start: string; end: string; status: 'available' | 'unavailable' }>
   >([])
 
-  // localStorage에서 프로필 자동 채움
+  const [adminToken, setAdminToken] = useState<string | null>(null)
+
+  // localStorage에서 프로필 및 관리 토큰 자동 채움
   useEffect(() => {
     const profile = getUserProfile()
     if (profile) {
       setEmail(profile.email)
       setName(profile.name)
     }
+    setAdminToken(getAdminToken(event.id))
   }, [])
 
   // 히트맵
@@ -182,6 +186,7 @@ function RespondPage() {
             })}
           </p>
         </div>
+        {adminToken && <AdminLink eventId={event.id} token={adminToken} />}
       </VStack>
     )
   }
@@ -195,6 +200,7 @@ function RespondPage() {
             참여 가능한 공통 시간을 찾을 수 없어 일정이 취소되었습니다.
           </Text>
         </div>
+        {adminToken && <AdminLink eventId={event.id} token={adminToken} />}
       </VStack>
     )
   }
@@ -222,6 +228,7 @@ function RespondPage() {
         >
           응답 수정
         </Button>
+        {adminToken && <AdminLink eventId={event.id} token={adminToken} />}
       </VStack>
     )
   }
@@ -248,6 +255,8 @@ function RespondPage() {
             </Text>
           </Card.Body>
         </Card>
+
+        {adminToken && <AdminLink eventId={event.id} token={adminToken} />}
 
         <VStack align="stretch" gap="16">
           <Field label="이메일">
@@ -364,6 +373,19 @@ function RespondPage() {
         {isSubmitting ? '제출 중...' : isEditing ? '응답 수정' : '응답 제출'}
       </Button>
     </VStack>
+  )
+}
+
+function AdminLink({ eventId, token }: { eventId: string; token: string }) {
+  return (
+    <Link
+      to="/$eventId/admin"
+      params={{ eventId }}
+      search={{ token }}
+      className="text-sm text-blue-600 hover:underline"
+    >
+      주최자 관리 화면으로 이동 →
+    </Link>
   )
 }
 

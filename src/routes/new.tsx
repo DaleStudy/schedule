@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { Button, TextInput, Select, Label, Link as DaleLink, VStack, Heading, Text } from 'daleui'
 import { Copy, Check } from 'lucide-react'
 import { createEvent } from '../server/functions/events'
-import { getUserProfile, saveUserProfile } from '../lib/local-events'
+import { getUserProfile, saveUserProfile, saveAdminToken } from '../lib/local-events'
 
 export const Route = createFileRoute('/new')({
   component: CreateEventPage,
@@ -64,6 +64,7 @@ function CreateEventPage() {
       if (organizerEmail.trim()) {
         saveUserProfile({ email: organizerEmail.trim(), name: '' })
       }
+      saveAdminToken(res.eventId, res.adminToken)
       setResult(res)
     } catch (err) {
       alert('일정 생성에 실패했습니다: ' + (err as Error).message)
