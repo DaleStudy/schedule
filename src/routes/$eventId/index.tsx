@@ -15,6 +15,7 @@ import {
 import { parseAvailabilityText } from '../../server/functions/parse-availability'
 import { TimeGrid } from '../../components/time-grid'
 import { TimezoneSelector } from '../../components/timezone-selector'
+import { TimezoneConversions } from '../../components/timezone-conversions'
 
 export const Route = createFileRoute('/$eventId/')({
   loader: async ({ params }) => {
@@ -186,6 +187,11 @@ function RespondPage() {
               timeZoneName: 'short',
             })}
           </p>
+          <TimezoneConversions
+            start={event.confirmedStart}
+            end={event.confirmedEnd!}
+            participantTimezones={event.participants.map((p) => p.timezone)}
+          />
         </div>
         {adminToken && <AdminLink eventId={event.id} token={adminToken} />}
       </VStack>

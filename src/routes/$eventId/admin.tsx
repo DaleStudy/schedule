@@ -11,6 +11,7 @@ import type { OptimalResult } from '../../lib/optimal-time'
 import { TimeGrid } from '../../components/time-grid'
 import { TimezoneSelector } from '../../components/timezone-selector'
 import { dayjs } from '../../lib/time'
+import { TimezoneConversions } from '../../components/timezone-conversions'
 
 interface AdminSearch {
   token: string
@@ -173,6 +174,11 @@ function AdminDashboard() {
               timeZoneName: 'short',
             })}
           </p>
+          <TimezoneConversions
+            start={event.confirmedStart}
+            end={event.confirmedEnd!}
+            participantTimezones={event.participants.map((p) => p.timezone)}
+          />
         </div>
       )}
 
