@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Button, Tag, VStack, Flex, HStack, Heading, TextInput } from 'daleui'
-import { getUserProfile, saveUserProfile } from '../lib/local-events'
+import { getUserProfile, saveUserProfile, saveAdminToken } from '../lib/local-events'
 import { getMyEvents } from '../server/functions/events'
 
 export const Route = createFileRoute('/')({
@@ -41,6 +41,9 @@ function HomePage() {
     setIsLoading(true)
     try {
       const results = await getMyEvents({ data: { email: emailToSearch.trim() } })
+      for (const e of results) {
+        if (e.adminToken) saveAdminToken(e.id, e.adminToken)
+      }
       setMyEvents(results)
     } catch {
       setMyEvents([])
