@@ -96,6 +96,14 @@ export const getEventByAdminToken = createServerFn({ method: 'GET' })
       where: eq(participants.eventId, event.id),
     })
 
+    const allSlots = await db.query.availabilitySlots.findMany({
+      where: eq(availabilitySlots.eventId, event.id),
+    })
+
+    const participantMap = new Map(
+      eventParticipants.map((p) => [p.id, p.name]),
+    )
+
     return {
       ...event,
       participants: eventParticipants.map((p) => ({
@@ -104,6 +112,13 @@ export const getEventByAdminToken = createServerFn({ method: 'GET' })
         name: p.name,
         respondedAt: p.respondedAt,
         timezone: p.timezone,
+      })),
+      slots: allSlots.map((s) => ({
+        participantId: s.participantId,
+        participantName: participantMap.get(s.participantId) ?? '',
+        startAt: s.startAt,
+        endAt: s.endAt,
+        status: s.status,
       })),
     }
   })

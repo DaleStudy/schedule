@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Button, Label, Card, Link as DaleLink, VStack, Flex, Heading, Text } from 'daleui'
 import { Copy, Check, SquarePen } from 'lucide-react'
 import {
   getEventByAdminToken,
   confirmEvent,
 } from '../../server/functions/events'
+import { TimeGrid } from '../../components/time-grid'
+import { TimezoneSelector } from '../../components/timezone-selector'
+import { dayjs } from '../../lib/time'
 
 interface AdminSearch {
   token: string
@@ -26,9 +29,80 @@ function AdminDashboard() {
   const event = Route.useLoaderData()
   const { token } = Route.useSearch()
   const [isConfirming, setIsConfirming] = useState(false)
+  const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const [timezone, setTimezone] = useState(detectedTz)
 
   const respondedCount = event.participants.filter((p) => p.respondedAt).length
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+
+  const SLOT_MIN = 30
+
+  // 히트맵: 셀별 가능 인원 수
+  const heatmap = useMemo(() => {
+    if (!event.slots || event.slots.length === 0) return undefined
+    const map = new Map<string, number>()
+    for (const slot of event.slots) {
+      if (slot.status !== 'available') continue
+      let cursor = dayjs.utc(slot.startAt).tz(timezone)
+      const end = dayjs.utc(slot.endAt).tz(timezone)
+      while (cursor.isBefore(end)) {
+        const key = `${cursor.format('YYYY-MM-DD')} ${cursor.format('H:mm')}`
+        map.set(key, (map.get(key) ?? 0) + 1)
+        cursor = cursor.add(SLOT_MIN, 'minute')
+      }
+    }
+    return map
+  }, [event.slots, timezone])
+
+  const heatmapMax = heatmap ? Math.max(...heatmap.values(), 1) : 1
+
+  // 이탈자 감지: 다수(50%+)가 가능한 시간에 참여 불가능한 사람
+  const outliers = useMemo(() => {
+    if (!event.slots || respondedCount < 2) return []
+    const threshold = Math.ceil(respondedCount / 2)
+
+    // 다수가 가능한 셀 키 집합
+    const popularCells = new Set<string>()
+    if (heatmap) {
+      for (const [key, count] of heatmap) {
+        if (count >= threshold) popularCells.add(key)
+      }
+    }
+    if (popularCells.size === 0) return []
+
+    // 참여자별 가능 셀 집합
+    const respondedParticipants = event.participants.filter((p) => p.respondedAt)
+    const participantCells = new Map<string, Set<string>>()
+    for (const p of respondedParticipants) {
+      participantCells.set(p.id, new Set())
+    }
+    for (const slot of event.slots) {
+      if (slot.status !== 'available') continue
+      const cells = participantCells.get(slot.participantId)
+      if (!cells) continue
+      let cursor = dayjs.utc(slot.startAt).tz(timezone)
+      const end = dayjs.utc(slot.endAt).tz(timezone)
+      while (cursor.isBefore(end)) {
+        cells.add(`${cursor.format('YYYY-MM-DD')} ${cursor.format('H:mm')}`)
+        cursor = cursor.add(SLOT_MIN, 'minute')
+      }
+    }
+
+    // 다수 시간과 겹침이 적은 참여자 찾기
+    const result: Array<{ name: string; email: string; overlapPercent: number }> = []
+    for (const p of respondedParticipants) {
+      const cells = participantCells.get(p.id)!
+      let overlap = 0
+      for (const key of popularCells) {
+        if (cells.has(key)) overlap++
+      }
+      const overlapPercent = Math.round((overlap / popularCells.size) * 100)
+      if (overlapPercent < 30) {
+        result.push({ name: p.name, email: p.email, overlapPercent })
+      }
+    }
+    return result.sort((a, b) => a.overlapPercent - b.overlapPercent)
+  }, [event.slots, event.participants, respondedCount, heatmap, timezone])
 
   const handleConfirm = async () => {
     if (!confirm('현재 응답을 기반으로 최적 시간을 확정하시겠습니까?')) return
@@ -109,6 +183,49 @@ function AdminDashboard() {
               </div>
             )}
           </div>
+
+          {respondedCount > 0 && heatmap && heatmap.size > 0 && (
+            <div>
+              <Flex align="center" justify="between" className="mb-2">
+                <Text weight="medium">전체 응답 현황</Text>
+                <TimezoneSelector value={timezone} onChange={setTimezone} />
+              </Flex>
+              <TimeGrid
+                eventDateStart={event.eventDateStart}
+                eventDateEnd={event.eventDateEnd}
+                timezone={timezone}
+                slots={[]}
+                onSlotsChange={() => {}}
+                readOnly
+                heatmap={heatmap}
+                heatmapMax={heatmapMax}
+              />
+            </div>
+          )}
+
+          {outliers.length > 0 && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <Text size="sm" weight="medium" className="text-amber-800 mb-2">
+                다수와 시간이 맞지 않는 참여자
+              </Text>
+              <Text size="xs" tone="neutral" className="mb-3">
+                아래 참여자의 가능 시간이 다른 참여자들과 거의 겹치지 않습니다. 추가 조율이 필요할 수 있습니다.
+              </Text>
+              <div className="space-y-1">
+                {outliers.map((o) => (
+                  <div key={o.email} className="flex items-center justify-between text-sm">
+                    <span>
+                      <Text as="span" weight="medium">{o.name}</Text>
+                      <Text as="span" size="xs" tone="neutral" className="ml-2">{o.email}</Text>
+                    </span>
+                    <Text as="span" size="xs" className="text-amber-700">
+                      겹침 {o.overlapPercent}%
+                    </Text>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {respondedCount > 0 && (
             <Button
