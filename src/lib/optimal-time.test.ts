@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { findOptimalTime } from './optimal-time'
+import { findOptimalTime, findTopCandidates } from './optimal-time'
 
 describe('findOptimalTime', () => {
   const eventStart = '2026-04-14T00:00:00Z'
@@ -70,5 +70,46 @@ describe('findOptimalTime', () => {
     const result = findOptimalTime(slots, 90, eventStart, eventEnd, 2)
     expect(result).not.toBeNull()
     expect(result!.availableCount).toBeGreaterThanOrEqual(1)
+  })
+
+  it('eventDateStart에 초/밀리초가 포함되어도 슬롯을 찾는다', () => {
+    // 실제 프로덕션 버그 재현: new Date()로 생성된 이벤트 날짜에 초/밀리초 포함
+    const dirtyStart = '2026-04-08T01:31:02.990Z'
+    const dirtyEnd = '2026-04-21T01:31:02.990Z'
+    const slots = [
+      { participantId: 'a', startAt: '2026-04-08T05:00:00.000Z', endAt: '2026-04-08T06:00:00.000Z', status: 'available' as const },
+      { participantId: 'b', startAt: '2026-04-08T05:00:00.000Z', endAt: '2026-04-08T06:00:00.000Z', status: 'available' as const },
+    ]
+
+    const result = findOptimalTime(slots, 60, dirtyStart, dirtyEnd, 2)
+    expect(result).not.toBeNull()
+    expect(result!.availableCount).toBe(2)
+    expect(result!.start).toBe('2026-04-08T05:00:00.000Z')
+  })
+})
+
+describe('findTopCandidates', () => {
+  it('겹치지 않는 상위 후보를 반환한다', () => {
+    const slots = [
+      { participantId: 'a', startAt: '2026-04-14T05:00:00Z', endAt: '2026-04-14T07:00:00Z', status: 'available' as const },
+      { participantId: 'b', startAt: '2026-04-14T05:00:00Z', endAt: '2026-04-14T07:00:00Z', status: 'available' as const },
+      { participantId: 'a', startAt: '2026-04-15T05:00:00Z', endAt: '2026-04-15T07:00:00Z', status: 'available' as const },
+    ]
+
+    const results = findTopCandidates(slots, 60, '2026-04-14T00:00:00Z', '2026-04-16T00:00:00Z', 2)
+    expect(results.length).toBeGreaterThanOrEqual(2)
+    expect(results[0].availableCount).toBe(2)
+    // 두 번째 후보는 첫 번째와 겹치지 않아야 함
+    expect(results[1].start >= results[0].end || results[1].end <= results[0].start).toBe(true)
+  })
+
+  it('eventDateStart에 초/밀리초가 포함되어도 후보를 찾는다', () => {
+    const slots = [
+      { participantId: 'a', startAt: '2026-04-08T05:00:00.000Z', endAt: '2026-04-08T06:00:00.000Z', status: 'available' as const },
+    ]
+
+    const results = findTopCandidates(slots, 60, '2026-04-08T01:31:02.990Z', '2026-04-21T01:31:02.990Z', 1)
+    expect(results.length).toBe(1)
+    expect(results[0].start).toBe('2026-04-08T05:00:00.000Z')
   })
 })

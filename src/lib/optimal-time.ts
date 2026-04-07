@@ -32,8 +32,8 @@ export function findOptimalTime(
   const availableSlots = slots.filter((s) => s.status === 'available')
   if (availableSlots.length === 0) return null
 
-  const rangeStart = dayjs.utc(eventDateStart)
-  const rangeEnd = dayjs.utc(eventDateEnd)
+  const rangeStart = dayjs.utc(eventDateStart).startOf('day')
+  const rangeEnd = dayjs.utc(eventDateEnd).endOf('day')
 
   // 셀 단위 가용성 맵: timestamp -> Set<participantId>
   const cellMap = new Map<string, Set<string>>()
@@ -153,8 +153,8 @@ export function findTopCandidates(
   const availableSlots = slots.filter((s) => s.status === 'available')
   if (availableSlots.length === 0) return []
 
-  const rangeStart = dayjs.utc(eventDateStart)
-  const rangeEnd = dayjs.utc(eventDateEnd)
+  const rangeStart = dayjs.utc(eventDateStart).startOf('day')
+  const rangeEnd = dayjs.utc(eventDateEnd).endOf('day')
 
   // 셀 단위 가용성 맵
   const cellMap = new Map<string, Set<string>>()
