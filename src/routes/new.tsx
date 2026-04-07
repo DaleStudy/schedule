@@ -41,9 +41,9 @@ function CreateEventPage() {
       eventDateStart.setDate(now.getDate() + 1)
       const eventDateEnd = new Date(now)
       eventDateEnd.setDate(now.getDate() + eventWeeks * 7)
-      const responseDeadlineAt = new Date(eventDateStart)
+      const responseDeadlineAt = new Date(eventDateEnd)
       responseDeadlineAt.setDate(
-        eventDateStart.getDate() - deadlineDaysBefore,
+        eventDateEnd.getDate() - deadlineDaysBefore,
       )
       if (responseDeadlineAt <= now) {
         responseDeadlineAt.setTime(now.getTime() + 24 * 60 * 60 * 1000)
@@ -162,7 +162,7 @@ function CreateEventPage() {
             <option value="14">2주 전 확정</option>
           </Select>
           <Text size="xs" tone="neutral" className="mt-1">
-            모임 시작일 기준으로 이 기간 전에 자동 확정됩니다.
+            목표 기간 종료일 기준으로 이 기간 전에 자동 확정됩니다.
           </Text>
         </Field>
       </div>
