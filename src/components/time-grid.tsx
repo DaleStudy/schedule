@@ -79,20 +79,30 @@ export function TimeGrid({
       const current = slotStatusMap.get(key)
       const newStatus = forceStatus ?? (current === 'available' ? undefined : 'available')
 
-      // 기존 슬롯에서 이 셀에 해당하는 항목 제거
-      const cellStart = dayjs
+      // 기존 슬롯에서 이 셀에 해당하는 부분 제거 (멀티시간 슬롯도 분할 처리)
+      const cellStartDjs = dayjs
         .tz(`${day} ${time}`, 'YYYY-MM-DD H:mm', timezone)
         .utc()
-        .toISOString()
-      const cellEnd = dayjs
-        .tz(`${day} ${time}`, 'YYYY-MM-DD H:mm', timezone)
-        .add(SLOT_MINUTES, 'minute')
-        .utc()
-        .toISOString()
+      const cellEndDjs = cellStartDjs.add(SLOT_MINUTES, 'minute')
+      const cellStart = cellStartDjs.toISOString()
+      const cellEnd = cellEndDjs.toISOString()
 
-      const filtered = slots.filter(
-        (s) => !(s.start === cellStart && s.end === cellEnd),
-      )
+      const filtered: TimeSlot[] = []
+      for (const s of slots) {
+        const sStart = dayjs.utc(s.start)
+        const sEnd = dayjs.utc(s.end)
+        if (cellStartDjs.isBefore(sEnd) && cellEndDjs.isAfter(sStart)) {
+          // 이 슬롯이 해당 셀을 포함 → 셀 앞/뒤를 잔여 슬롯으로 분할
+          if (sStart.isBefore(cellStartDjs)) {
+            filtered.push({ start: s.start, end: cellStart, status: s.status })
+          }
+          if (sEnd.isAfter(cellEndDjs)) {
+            filtered.push({ start: cellEnd, end: s.end, status: s.status })
+          }
+        } else {
+          filtered.push(s)
+        }
+      }
 
       if (newStatus) {
         filtered.push({ start: cellStart, end: cellEnd, status: newStatus })
