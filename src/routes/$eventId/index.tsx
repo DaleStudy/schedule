@@ -183,6 +183,7 @@ function RespondPage() {
             {' ~ '}
             {new Date(event.confirmedEnd!).toLocaleString('ko-KR', {
               hour: '2-digit', minute: '2-digit',
+              timeZoneName: 'short',
             })}
           </p>
         </div>

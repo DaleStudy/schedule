@@ -139,9 +139,10 @@ function EventDates({ event: e }: { event: MyEvent }) {
   if (e.status === 'confirmed' && e.confirmedStart) {
     return (
       <span className="text-xs text-gray-500">
-        {new Date(e.confirmedStart).toLocaleDateString('ko-KR', {
+        {new Date(e.confirmedStart).toLocaleString('ko-KR', {
           month: 'short', day: 'numeric', weekday: 'short',
           hour: '2-digit', minute: '2-digit',
+          timeZoneName: 'short',
         })}
       </span>
     )

@@ -170,6 +170,7 @@ function AdminDashboard() {
             {' ~ '}
             {new Date(event.confirmedEnd!).toLocaleString('ko-KR', {
               hour: '2-digit', minute: '2-digit',
+              timeZoneName: 'short',
             })}
           </p>
         </div>
@@ -291,6 +292,7 @@ function AdminDashboard() {
                         {' ~ '}
                         {new Date(c.end).toLocaleTimeString('ko-KR', {
                           hour: '2-digit', minute: '2-digit',
+                          timeZoneName: 'short',
                         })}
                       </Text>
                     </div>
