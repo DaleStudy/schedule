@@ -153,7 +153,7 @@ export function findTopCandidates(
   eventDateStart: string,
   eventDateEnd: string,
   totalParticipants: number,
-  maxResults = 5,
+  maxResults = 10,
 ): OptimalResult[] {
   const availableSlots = slots.filter((s) => s.status === 'available')
   if (availableSlots.length === 0) return []
