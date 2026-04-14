@@ -8,6 +8,8 @@ import {
   getCandidateTimes,
 } from '../../server/functions/events'
 import type { OptimalResult } from '../../lib/optimal-time'
+
+type CandidateResult = OptimalResult & { availableNames: string[] }
 import { TimeGrid } from '../../components/time-grid'
 import { TimezoneSelector } from '../../components/timezone-selector'
 import { dayjs } from '../../lib/time'
@@ -33,7 +35,7 @@ function AdminDashboard() {
   const { token } = Route.useSearch()
   const [isConfirming, setIsConfirming] = useState(false)
   const [isLoadingCandidates, setIsLoadingCandidates] = useState(false)
-  const [candidates, setCandidates] = useState<OptimalResult[] | null>(null)
+  const [candidates, setCandidates] = useState<CandidateResult[] | null>(null)
   const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone
   const [timezone, setTimezone] = useState(detectedTz)
 
@@ -306,6 +308,11 @@ function AdminDashboard() {
                       {c.availableCount}/{c.totalParticipants}명 가능
                     </Text>
                   </Flex>
+                  {c.availableNames.length > 0 && (
+                    <Text size="xs" tone="neutral" className="mt-1">
+                      {c.availableNames.join(', ')}
+                    </Text>
+                  )}
                 </button>
               ))}
               <Button

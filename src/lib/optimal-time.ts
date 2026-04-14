@@ -12,6 +12,7 @@ export interface OptimalResult {
   end: string
   availableCount: number
   totalParticipants: number
+  availableParticipantIds: string[]
 }
 
 const SLOT_MINUTES = 30
@@ -56,6 +57,7 @@ export function findOptimalTime(
   const requiredCells = Math.ceil(durationMinutes / SLOT_MINUTES)
   let bestStart: string | null = null
   let bestCount = 0
+  let bestParticipantIds: string[] = []
 
   // 슬라이딩 윈도우로 최적 시간 탐색
   let cursor = rangeStart
@@ -86,6 +88,7 @@ export function findOptimalTime(
     if (count > bestCount) {
       bestCount = count
       bestStart = cursor.toISOString()
+      bestParticipantIds = [...windowParticipants!]
     }
 
     cursor = cursor.add(SLOT_MINUTES, 'minute')
@@ -98,6 +101,7 @@ export function findOptimalTime(
       end: dayjs.utc(bestStart).add(durationMinutes, 'minute').toISOString(),
       availableCount: bestCount,
       totalParticipants,
+      availableParticipantIds: bestParticipantIds,
     }
   }
 
@@ -132,6 +136,7 @@ export function findOptimalTime(
         .toISOString(),
       availableCount: fallbackMinCount,
       totalParticipants,
+      availableParticipantIds: [],
     }
   }
 
@@ -172,7 +177,7 @@ export function findTopCandidates(
   const requiredCells = Math.ceil(durationMinutes / SLOT_MINUTES)
 
   // 모든 윈도우 점수 계산
-  const scored: Array<{ start: string; end: string; count: number }> = []
+  const scored: Array<{ start: string; end: string; count: number; participantIds: string[] }> = []
   let cursor = rangeStart
   while (!cursor.add(durationMinutes, 'minute').isAfter(rangeEnd)) {
     let windowParticipants: Set<string> | null = null
@@ -199,6 +204,7 @@ export function findTopCandidates(
         start: cursor.toISOString(),
         end: cursor.add(durationMinutes, 'minute').toISOString(),
         count,
+        participantIds: [...windowParticipants!],
       })
     }
     cursor = cursor.add(SLOT_MINUTES, 'minute')
@@ -220,6 +226,7 @@ export function findTopCandidates(
         end: s.end,
         availableCount: s.count,
         totalParticipants,
+        availableParticipantIds: s.participantIds,
       })
     }
   }

@@ -146,7 +146,9 @@ export const getCandidateTimes = createServerFn({ method: 'POST' })
       where: eq(participants.eventId, data.eventId),
     })
 
-    return findTopCandidates(
+    const nameMap = new Map(allParticipants.map((p) => [p.id, p.name]))
+
+    const candidates = findTopCandidates(
       allSlots.map((s) => ({
         participantId: s.participantId,
         startAt: s.startAt,
@@ -158,6 +160,11 @@ export const getCandidateTimes = createServerFn({ method: 'POST' })
       event.eventDateEnd,
       allParticipants.length,
     )
+
+    return candidates.map((c) => ({
+      ...c,
+      availableNames: c.availableParticipantIds.map((id) => nameMap.get(id) ?? id),
+    }))
   })
 
 export const confirmEvent = createServerFn({ method: 'POST' })
