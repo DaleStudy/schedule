@@ -38,11 +38,28 @@ function AdminDashboard() {
   const [candidates, setCandidates] = useState<CandidateResult[] | null>(null)
   const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone
   const [timezone, setTimezone] = useState(detectedTz)
+  const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null)
 
   const respondedCount = event.participants.filter((p) => p.respondedAt).length
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
   const SLOT_MIN = 30
+
+  // 선택된 참여자의 가능 시간 셀
+  const highlightCells = useMemo(() => {
+    if (!selectedParticipantId || !event.slots) return undefined
+    const cells = new Set<string>()
+    for (const slot of event.slots) {
+      if (slot.participantId !== selectedParticipantId || slot.status !== 'available') continue
+      let cursor = dayjs.utc(slot.startAt).tz(timezone)
+      const end = dayjs.utc(slot.endAt).tz(timezone)
+      while (cursor.isBefore(end)) {
+        cells.add(`${cursor.format('YYYY-MM-DD')} ${cursor.format('H:mm')}`)
+        cursor = cursor.add(SLOT_MIN, 'minute')
+      }
+    }
+    return cells
+  }, [selectedParticipantId, event.slots, timezone])
 
   // 히트맵: 셀별 가능 인원 수
   const heatmap = useMemo(() => {
@@ -202,9 +219,18 @@ function AdminDashboard() {
             {event.participants.length > 0 && (
               <div className="divide-y">
                 {event.participants.map((p) => (
-                  <div
+                  <button
                     key={p.id}
-                    className="flex items-center justify-between px-4 py-3"
+                    type="button"
+                    className={`flex w-full items-center justify-between px-4 py-3 text-left transition-colors ${
+                      p.respondedAt ? 'cursor-pointer hover:bg-blue-50' : 'cursor-default'
+                    } ${selectedParticipantId === p.id ? 'bg-blue-50 ring-1 ring-inset ring-blue-300' : ''}`}
+                    onClick={() => {
+                      if (!p.respondedAt) return
+                      setSelectedParticipantId(
+                        selectedParticipantId === p.id ? null : p.id,
+                      )
+                    }}
                   >
                     <div>
                       <Text as="span" weight="medium">{p.name}</Text>
@@ -213,7 +239,7 @@ function AdminDashboard() {
                     <Text as="span" size="xs" tone={p.respondedAt ? 'success' : 'neutral'}>
                       {p.respondedAt ? '응답 완료' : '대기 중'}
                     </Text>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -222,7 +248,11 @@ function AdminDashboard() {
           {respondedCount > 0 && heatmap && heatmap.size > 0 && (
             <div>
               <Flex align="center" justify="between" className="mb-2">
-                <Text weight="medium">전체 응답 현황</Text>
+                <Text weight="medium">
+                  {selectedParticipantId
+                    ? `${event.participants.find((p) => p.id === selectedParticipantId)?.name}님의 응답`
+                    : '전체 응답 현황'}
+                </Text>
                 <TimezoneSelector value={timezone} onChange={setTimezone} />
               </Flex>
               <TimeGrid
@@ -234,6 +264,7 @@ function AdminDashboard() {
                 readOnly
                 heatmap={heatmap}
                 heatmapMax={heatmapMax}
+                highlightCells={highlightCells}
               />
             </div>
           )}

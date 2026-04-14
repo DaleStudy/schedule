@@ -16,6 +16,7 @@ interface TimeGridProps {
   readOnly?: boolean
   heatmap?: Map<string, number>
   heatmapMax?: number
+  highlightCells?: Set<string>
 }
 
 const HOURS_START = 6
@@ -31,6 +32,7 @@ export function TimeGrid({
   readOnly = false,
   heatmap,
   heatmapMax = 1,
+  highlightCells,
 }: TimeGridProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragStatus, setDragStatus] = useState<'available' | undefined>(
@@ -198,11 +200,23 @@ export function TimeGrid({
               {days.map((day) => {
                 const status = getCellStatus(day, time)
                 const hasSelections = slots.length > 0
-                const heatCount = heatmap?.get(getCellKey(day, time)) ?? 0
+                const cellKey = getCellKey(day, time)
+                const heatCount = heatmap?.get(cellKey) ?? 0
+                const isHighlighted = highlightCells?.has(cellKey) ?? false
                 const heatOpacity =
                   heatmap && heatmapMax > 0 && !status
                     ? Math.round((heatCount / heatmapMax) * 40 + 10)
                     : 0
+
+                let bgColor: string | undefined
+                if (isHighlighted) {
+                  bgColor = 'rgba(34, 197, 94, 0.6)'
+                } else if (!status && heatCount > 0) {
+                  bgColor = highlightCells
+                    ? `rgba(59, 130, 246, ${(heatOpacity / 100) * 0.3})`
+                    : `rgba(59, 130, 246, ${heatOpacity / 100})`
+                }
+
                 return (
                   <td
                     key={`${day}-${time}`}
@@ -217,10 +231,7 @@ export function TimeGrid({
                     } ${time.endsWith(':00') ? 'border-t-gray-300' : 'border-t-gray-100'}`}
                     style={{
                       height: 24,
-                      backgroundColor:
-                        !status && heatCount > 0
-                          ? `rgba(59, 130, 246, ${heatOpacity / 100})`
-                          : undefined,
+                      backgroundColor: bgColor,
                     }}
                     title={heatCount > 0 ? `${heatCount}명 가능` : undefined}
                     onMouseDown={() => handleCellAction(day, time, true)}
