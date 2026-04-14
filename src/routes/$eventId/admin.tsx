@@ -312,7 +312,7 @@ function AdminDashboard() {
                   참여 가능 인원이 많은 순서입니다.
                 </Text>
               </div>
-              {candidates.map((c, i) => (
+              {candidates.map((c) => (
                 <button
                   key={c.start}
                   onClick={() => handleConfirm(c.start, c.end)}
@@ -322,7 +322,7 @@ function AdminDashboard() {
                   <Flex align="center" justify="between">
                     <div>
                       <Text weight="medium">
-                        {i + 1}. {new Date(c.start).toLocaleDateString('ko-KR', {
+                        {new Date(c.start).toLocaleDateString('ko-KR', {
                           month: 'long', day: 'numeric', weekday: 'short',
                         })}{' '}
                         {new Date(c.start).toLocaleTimeString('ko-KR', {
