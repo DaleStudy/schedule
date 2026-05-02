@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { Button, TextInput, Select, Label, Link as DaleLink, VStack, Heading, Text } from 'daleui'
+import { Button, TextInput, Select, Label, Link as DaleLink, VStack, Heading, Text, Grid } from 'daleui'
 import { Copy, Check } from 'lucide-react'
 import { createEvent } from '../server/functions/events'
 import { getUserProfile, saveUserProfile, saveAdminToken } from '../lib/local-events'
@@ -140,7 +140,7 @@ function CreateEventPage() {
         </Select>
       </Field>
 
-      <div className="grid grid-cols-2 gap-4">
+      <Grid gridTemplateColumns="1fr 1fr" gap="16">
         <Field label="목표 기간">
           <Select
             value={String(eventWeeks)}
@@ -166,7 +166,7 @@ function CreateEventPage() {
             목표 기간 종료일 기준으로 이 기간 전에 자동 확정됩니다.
           </Text>
         </Field>
-      </div>
+      </Grid>
 
       <Field label="최소 인원 (선택)">
         <TextInput
