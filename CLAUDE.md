@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 bun run dev          # Dev server on port 3000
 bun run build        # Production build
 bun run test         # Typecheck (tsc --noEmit) + run tests
-bun run deploy       # Build + wrangler deploy
+bun run deploy       # Build + wrangler deploy (manual fallback only — see Deployment below)
 bun run cf-typegen   # Regenerate worker-configuration.d.ts after wrangler.jsonc changes
 bun run db:generate  # Generate Drizzle migration from schema changes
 bun run db:migrate:local   # Apply migrations to local D1
@@ -32,6 +32,9 @@ All dates stored as **UTC ISO strings**. Convert with `dayjs.utc()` and `.tz(tim
 
 ### Routing
 File-based: `src/routes/$eventId/index.tsx` → `/{eventId}`. Admin pages use `?token=` query param for auth. Route params via `Route.useLoaderData()`, search params via `Route.useSearch()`.
+
+### Deployment
+**Pushes to `main` auto-deploy to Cloudflare Workers** via the GitHub integration configured in the Cloudflare dashboard (Workers Builds). Do not run `bun run deploy` after a push — it is only a manual fallback for when the auto-deploy pipeline is unavailable.
 
 ## Key Gotchas
 
