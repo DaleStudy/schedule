@@ -37,9 +37,9 @@ export const parseAvailabilityText = createServerFn({ method: 'POST' })
     }
 
     const response = (await env.AI.run(
-      '@cf/google/gemma-3-12b-it',
+      '@cf/google/gemma-4-26b-a4b-it',
       {
-        max_tokens: 2048,
+        max_tokens: 4096,
         messages: [
           {
             role: 'user',
@@ -65,9 +65,15 @@ JSON 배열만 출력하세요. 설명 없이.
           },
         ],
       },
-    )) as { response?: string }
+    )) as {
+      response?: string
+      choices?: { message?: { content?: string } }[]
+    }
 
-    const content = response.response ?? ''
+    // Gemma 4 responds in OpenAI-compatible format (choices); the old
+    // { response } shape is kept as a fallback for model swaps.
+    const content =
+      response.choices?.[0]?.message?.content ?? response.response ?? ''
 
     const startIdx = content.indexOf('[')
     const endIdx = content.lastIndexOf(']')
