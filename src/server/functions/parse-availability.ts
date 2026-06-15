@@ -15,6 +15,32 @@ interface LocalSlot {
   status: 'available' | 'unavailable'
 }
 
+// response_format forces the model to emit output matching this schema,
+// which removes the need to strip markdown fences and guarantees a parseable
+// shape. Top-level must be an object (arrays aren't allowed), so slots are
+// wrapped. Gemma 4 is a reasoning model, so enable_thinking:false is required
+// alongside this — otherwise the thinking phase exhausts the token budget
+// before any schema-conforming answer is produced.
+const AVAILABILITY_SCHEMA = {
+  type: 'object',
+  properties: {
+    slots: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          date: { type: 'string' },
+          startTime: { type: 'string' },
+          endTime: { type: 'string' },
+          status: { type: 'string', enum: ['available', 'unavailable'] },
+        },
+        required: ['date', 'startTime', 'endTime', 'status'],
+      },
+    },
+  },
+  required: ['slots'],
+}
+
 export const parseAvailabilityText = createServerFn({ method: 'POST' })
   .inputValidator(
     (input: {
@@ -39,11 +65,18 @@ export const parseAvailabilityText = createServerFn({ method: 'POST' })
     const response = (await env.AI.run(
       '@cf/google/gemma-4-26b-a4b-it',
       {
-        max_tokens: 4096,
+        max_tokens: 2048,
+        // Disable Gemma 4's reasoning phase; without this the model burns the
+        // entire token budget thinking and returns empty content.
+        chat_template_kwargs: { enable_thinking: false },
+        response_format: {
+          type: 'json_schema',
+          json_schema: { name: 'availability', schema: AVAILABILITY_SCHEMA },
+        },
         messages: [
           {
             role: 'user',
-            content: `당신은 일정 파서입니다. 사용자의 가용 시간을 JSON으로 변환하세요.
+            content: `당신은 일정 파서입니다. 사용자의 가용 시간을 slots 배열로 변환하세요.
 
 가능한 날짜 목록: ${dates.join(', ')}
 오늘: ${today}
@@ -58,38 +91,32 @@ export const parseAvailabilityText = createServerFn({ method: 'POST' })
 - 2-6시, 2~6시 = 14:00~18:00 (오후)
 - 오전=09:00~12:00, 오후=13:00~18:00, 저녁=18:00~22:00
 - "가능" → "available", "안됨/불가/못" → "unavailable"
-- 불가능한 날은 하루종일: 09:00~22:00
-
-JSON 배열만 출력하세요. 설명 없이.
-[{"date":"YYYY-MM-DD","startTime":"HH:mm","endTime":"HH:mm","status":"available"|"unavailable"}]`,
+- 불가능한 날은 하루종일: 09:00~22:00`,
           },
         ],
       },
     )) as {
-      response?: string
-      choices?: { message?: { content?: string } }[]
+      response?: unknown
+      choices?: { message?: { content?: unknown } }[]
     }
 
-    // Gemma 4 responds in OpenAI-compatible format (choices); the old
-    // { response } shape is kept as a fallback for model swaps.
-    const content =
-      response.choices?.[0]?.message?.content ?? response.response ?? ''
+    // guided_json guarantees schema-conforming output, but the runtime may
+    // hand it back as an already-parsed object or as a JSON string.
+    const raw = response.choices?.[0]?.message?.content ?? response.response
 
-    const startIdx = content.indexOf('[')
-    const endIdx = content.lastIndexOf(']')
-    if (startIdx === -1 || endIdx === -1) {
-      throw new Error(
-        'AI 응답에서 JSON을 찾을 수 없습니다. 다시 시도해주세요.',
-      )
-    }
-
-    const jsonStr = content.slice(startIdx, endIdx + 1)
-    let localSlots: LocalSlot[]
+    let parsed: { slots?: LocalSlot[] }
     try {
-      localSlots = JSON.parse(jsonStr)
+      parsed = typeof raw === 'string' ? JSON.parse(raw) : (raw as typeof parsed)
     } catch {
       throw new Error(
         '시간 분석 결과를 파싱할 수 없습니다. 다시 시도해주세요.',
+      )
+    }
+
+    const localSlots = parsed?.slots
+    if (!Array.isArray(localSlots)) {
+      throw new Error(
+        'AI 응답에서 결과를 찾을 수 없습니다. 다시 시도해주세요.',
       )
     }
 
