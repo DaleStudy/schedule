@@ -1,4 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
+import { notFound } from '@tanstack/react-router'
 import { env } from 'cloudflare:workers'
 import { eq, and } from 'drizzle-orm'
 import { getDb } from '../../db'
@@ -50,7 +51,7 @@ export const getEvent = createServerFn({ method: 'GET' })
     const event = await db.query.events.findFirst({
       where: eq(events.id, data.eventId),
     })
-    if (!event) throw new Error('Event not found')
+    if (!event) throw notFound()
 
     const eventParticipants = await db.query.participants.findMany({
       where: eq(participants.eventId, data.eventId),
