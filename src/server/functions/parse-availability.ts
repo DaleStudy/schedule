@@ -42,7 +42,7 @@ const AVAILABILITY_SCHEMA = {
 }
 
 export const parseAvailabilityText = createServerFn({ method: 'POST' })
-  .inputValidator(
+  .validator(
     (input: {
       text: string
       eventDateStart: string

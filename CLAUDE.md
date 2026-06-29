@@ -25,7 +25,7 @@ bun run db:migrate:remote  # Apply migrations to remote D1
 3. Cron runs every 5 min → finds expired pending events → runs optimal-time algorithm → confirms or cancels
 
 ### Server functions
-Use `createServerFn` from `@tanstack/react-start` with `.inputValidator()` (not `.validator()`). Access Cloudflare bindings via `import { env } from 'cloudflare:workers'` — `env.DB` for D1, `env.AI` for Workers AI.
+Use `createServerFn` from `@tanstack/react-start` with `.validator()`. Access Cloudflare bindings via `import { env } from 'cloudflare:workers'` — `env.DB` for D1, `env.AI` for Workers AI.
 
 ### Time handling
 All dates stored as **UTC ISO strings**. Convert with `dayjs.utc()` and `.tz(timezone)`. Cell keys in the calendar grid use `H:mm` format (no zero-padding) — must be consistent everywhere or pre-10am cells break.
@@ -42,4 +42,3 @@ File-based: `src/routes/$eventId/index.tsx` → `/{eventId}`. Admin pages use `?
 - **Time format consistency**: Calendar grid cell keys use `"YYYY-MM-DD H:mm"` (single-digit hours). Using `HH:mm` anywhere breaks cells before 10am.
 - **Drizzle column references**: When querying participants/slots, use `eq(participants.eventId, ...)` not `eq(events.id, ...)`. TypeScript won't catch this since both are `text` columns. Tests in `events.test.ts` guard against this.
 - **Migration NOT NULL columns**: SQLite can't add NOT NULL columns without defaults to existing tables. Add `DEFAULT ''` in migration SQL when needed.
-- **`createServerFn` API**: The method is `.inputValidator()`, not `.validator()`. This changed in TanStack Start v1.167+.

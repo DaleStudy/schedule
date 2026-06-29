@@ -8,7 +8,7 @@ import { generateEventId, generateAdminToken } from '../../lib/tokens'
 import { nowUTC } from '../../lib/time'
 
 export const createEvent = createServerFn({ method: 'POST' })
-  .inputValidator(
+  .validator(
     (input: {
       title: string
       description?: string
@@ -44,7 +44,7 @@ export const createEvent = createServerFn({ method: 'POST' })
   })
 
 export const getEvent = createServerFn({ method: 'GET' })
-  .inputValidator((input: { eventId: string }) => input)
+  .validator((input: { eventId: string }) => input)
   .handler(async ({ data }) => {
     const db = getDb(env.DB)
 
@@ -84,14 +84,14 @@ export const getEvent = createServerFn({ method: 'GET' })
   })
 
 export const getEventByAdminToken = createServerFn({ method: 'GET' })
-  .inputValidator((input: { adminToken: string }) => input)
+  .validator((input: { adminToken: string }) => input)
   .handler(async ({ data }) => {
     const db = getDb(env.DB)
 
     const event = await db.query.events.findFirst({
       where: eq(events.adminToken, data.adminToken),
     })
-    if (!event) throw new Error('Event not found')
+    if (!event) throw notFound()
 
     const eventParticipants = await db.query.participants.findMany({
       where: eq(participants.eventId, event.id),
@@ -125,7 +125,7 @@ export const getEventByAdminToken = createServerFn({ method: 'GET' })
   })
 
 export const getCandidateTimes = createServerFn({ method: 'POST' })
-  .inputValidator(
+  .validator(
     (input: { eventId: string; adminToken: string }) => input,
   )
   .handler(async ({ data }) => {
@@ -169,7 +169,7 @@ export const getCandidateTimes = createServerFn({ method: 'POST' })
   })
 
 export const confirmEvent = createServerFn({ method: 'POST' })
-  .inputValidator(
+  .validator(
     (input: {
       eventId: string
       adminToken: string
@@ -243,7 +243,7 @@ export const confirmEvent = createServerFn({ method: 'POST' })
   })
 
 export const updateEvent = createServerFn({ method: 'POST' })
-  .inputValidator(
+  .validator(
     (input: {
       eventId: string
       adminToken: string
@@ -285,7 +285,7 @@ export const updateEvent = createServerFn({ method: 'POST' })
   })
 
 export const getMyEvents = createServerFn({ method: 'POST' })
-  .inputValidator((input: { email: string }) => input)
+  .validator((input: { email: string }) => input)
   .handler(async ({ data }) => {
     if (!data.email) return []
     const db = getDb(env.DB)

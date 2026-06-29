@@ -7,7 +7,7 @@ import { generateEventId, generateSlotId } from '../../lib/tokens'
 import { nowUTC } from '../../lib/time'
 
 export const getParticipantSlots = createServerFn({ method: 'POST' })
-  .inputValidator(
+  .validator(
     (input: { eventId: string; email: string }) => input,
   )
   .handler(async ({ data }) => {
@@ -40,7 +40,7 @@ export const getParticipantSlots = createServerFn({ method: 'POST' })
   })
 
 export const submitAvailability = createServerFn({ method: 'POST' })
-  .inputValidator(
+  .validator(
     (input: {
       eventId: string
       email: string
