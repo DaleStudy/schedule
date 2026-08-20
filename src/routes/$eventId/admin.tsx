@@ -41,6 +41,10 @@ function AdminDashboard() {
   const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null)
 
   const respondedCount = event.participants.filter((p) => p.respondedAt).length
+  const participantTimezones = useMemo(
+    () => event.participants.map((p) => p.timezone),
+    [event.participants],
+  )
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
   const SLOT_MIN = 30
@@ -151,7 +155,7 @@ function AdminDashboard() {
   }
 
   const handleConfirm = async (start: string, end: string) => {
-    if (!confirm('이 시간으로 확정하시겠습니까?')) return
+    if (!confirm(`${formatRange(start, end)}\n이 시간으로 확정하시겠습니까?`)) return
     setIsConfirming(true)
     try {
       await confirmEvent({
@@ -183,20 +187,12 @@ function AdminDashboard() {
             확정된 모임 시간
           </h2>
           <p className="text-lg font-medium text-green-900">
-            {new Date(event.confirmedStart).toLocaleString('ko-KR', {
-              month: 'long', day: 'numeric', weekday: 'short',
-              hour: '2-digit', minute: '2-digit',
-            })}
-            {' ~ '}
-            {new Date(event.confirmedEnd!).toLocaleString('ko-KR', {
-              hour: '2-digit', minute: '2-digit',
-              timeZoneName: 'short',
-            })}
+            {formatRange(event.confirmedStart, event.confirmedEnd!)}
           </p>
           <TimezoneConversions
             start={event.confirmedStart}
             end={event.confirmedEnd!}
-            participantTimezones={event.participants.map((p) => p.timezone)}
+            participantTimezones={participantTimezones}
           />
         </div>
       )}
@@ -312,40 +308,41 @@ function AdminDashboard() {
                   참여 가능 인원이 많은 순서입니다.
                 </Text>
               </div>
-              {candidates.map((c) => (
-                <button
-                  key={c.start}
-                  onClick={() => handleConfirm(c.start, c.end)}
-                  disabled={isConfirming}
-                  className="w-full rounded-lg border p-4 text-left hover:border-blue-400 hover:bg-blue-50 transition-colors disabled:opacity-50"
-                >
-                  <Flex align="center" justify="between">
-                    <div>
-                      <Text weight="medium">
-                        {new Date(c.start).toLocaleDateString('ko-KR', {
-                          month: 'long', day: 'numeric', weekday: 'short',
-                        })}{' '}
-                        {new Date(c.start).toLocaleTimeString('ko-KR', {
-                          hour: '2-digit', minute: '2-digit',
-                        })}
-                        {' ~ '}
-                        {new Date(c.end).toLocaleTimeString('ko-KR', {
-                          hour: '2-digit', minute: '2-digit',
-                          timeZoneName: 'short',
-                        })}
+              {candidates.map((c) => {
+                const minutes = rangeMinutes(c.start, c.end)
+                return (
+                  <button
+                    key={c.start}
+                    onClick={() => handleConfirm(c.start, c.end)}
+                    disabled={isConfirming}
+                    className="w-full rounded-lg border p-4 text-left hover:border-blue-400 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                  >
+                    <Flex align="center" justify="between">
+                      <div>
+                        <Text weight="medium">{formatRange(c.start, c.end)}</Text>
+                        {minutes < event.durationMinutes && (
+                          <Text as="span" size="xs" className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-amber-700">
+                            {minutes}분만 겹침
+                          </Text>
+                        )}
+                      </div>
+                      <Text size="sm" tone="success">
+                        {c.availableCount}/{c.totalParticipants}명 가능
                       </Text>
-                    </div>
-                    <Text size="sm" tone="success">
-                      {c.availableCount}/{c.totalParticipants}명 가능
-                    </Text>
-                  </Flex>
-                  {c.availableNames.length > 0 && (
-                    <Text size="xs" tone="neutral" className="mt-1">
-                      {c.availableNames.join(', ')}
-                    </Text>
-                  )}
-                </button>
-              ))}
+                    </Flex>
+                    {c.availableNames.length > 0 && (
+                      <Text size="xs" tone="neutral" className="mt-1">
+                        {c.availableNames.join(', ')}
+                      </Text>
+                    )}
+                    <TimezoneConversions
+                      start={c.start}
+                      end={c.end}
+                      participantTimezones={participantTimezones}
+                    />
+                  </button>
+                )
+              })}
               <Button
                 variant="ghost"
                 size="sm"
@@ -423,6 +420,27 @@ function EventInfoSection({
       </Card.Body>
     </Card>
   )
+}
+
+/** 후보/확정 시간을 "8월 23일 (일) 오후 09:00 ~ 오후 09:30 GMT+9" 형태로 표기 */
+function formatRange(start: string, end: string) {
+  const startText = new Date(start).toLocaleString('ko-KR', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  const endText = new Date(end).toLocaleTimeString('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  })
+  return `${startText} ~ ${endText}`
+}
+
+function rangeMinutes(start: string, end: string) {
+  return (new Date(end).getTime() - new Date(start).getTime()) / 60_000
 }
 
 function CopyField({ value }: { value: string }) {
