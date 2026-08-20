@@ -103,6 +103,40 @@ describe('findTopCandidates', () => {
     expect(results[1].start >= results[0].end || results[1].end <= results[0].start).toBe(true)
   })
 
+  it('소요 시간을 못 채워도 더 많은 인원이 겹치는 짧은 구간을 후보로 올린다', () => {
+    // 실제 프로덕션 사례: 두 사람이 겹치는 구간이 30분짜리 단발뿐인데 모임은 60분
+    const slots = [
+      { participantId: 'a', startAt: '2026-04-14T05:00:00Z', endAt: '2026-04-14T09:00:00Z', status: 'available' as const },
+      { participantId: 'b', startAt: '2026-04-14T05:00:00Z', endAt: '2026-04-14T05:30:00Z', status: 'available' as const },
+    ]
+
+    const results = findTopCandidates(slots, 60, '2026-04-14T00:00:00Z', '2026-04-16T00:00:00Z', 2)
+
+    // 2명이 겹치는 30분 구간이 1순위
+    expect(results[0].availableCount).toBe(2)
+    expect(results[0].start).toBe('2026-04-14T05:00:00.000Z')
+    expect(results[0].end).toBe('2026-04-14T05:30:00.000Z')
+    // 그 뒤로는 1명짜리 60분 후보
+    expect(results[1].availableCount).toBe(1)
+    expect(results[1].end).toBe(
+      new Date(new Date(results[1].start).getTime() + 60 * 60 * 1000).toISOString(),
+    )
+  })
+
+  it('소요 시간을 채우는 후보가 최대 인원이면 짧은 구간은 후보에 넣지 않는다', () => {
+    const slots = [
+      // 두 사람 모두 05:00-06:30 → 60분 후보로 2명이 가능하므로 30분짜리 조각은 불필요
+      { participantId: 'a', startAt: '2026-04-14T05:00:00Z', endAt: '2026-04-14T06:30:00Z', status: 'available' as const },
+      { participantId: 'b', startAt: '2026-04-14T05:00:00Z', endAt: '2026-04-14T06:30:00Z', status: 'available' as const },
+    ]
+
+    const results = findTopCandidates(slots, 60, '2026-04-14T00:00:00Z', '2026-04-16T00:00:00Z', 2)
+
+    for (const r of results) {
+      expect(new Date(r.end).getTime() - new Date(r.start).getTime()).toBe(60 * 60 * 1000)
+    }
+  })
+
   it('eventDateStart에 초/밀리초가 포함되어도 후보를 찾는다', () => {
     const slots = [
       { participantId: 'a', startAt: '2026-04-08T05:00:00.000Z', endAt: '2026-04-08T06:00:00.000Z', status: 'available' as const },
