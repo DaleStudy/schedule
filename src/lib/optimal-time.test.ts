@@ -37,14 +37,27 @@ describe('findOptimalTime', () => {
     expect(result!.start).toBe('2026-04-14T05:00:00.000Z')
   })
 
-  it('회의 시간보다 짧은 가용 슬롯은 선택하지 않음', () => {
+  it('소요 시간을 못 채우면 겹치는 길이 그대로 반환', () => {
     const slots = [
       // 30분짜리 슬롯 하나
       { participantId: 'a', startAt: '2026-04-14T05:00:00Z', endAt: '2026-04-14T05:30:00Z', status: 'available' as const },
     ]
 
     const result = findOptimalTime(slots, 60, eventStart, eventEnd, 1)
-    expect(result).toBeNull()
+    expect(result).not.toBeNull()
+    expect(result!.start).toBe('2026-04-14T05:00:00.000Z')
+    expect(result!.end).toBe('2026-04-14T05:30:00.000Z')
+  })
+
+  it('소요 시간을 다 채우는 후보가 있으면 짧은 구간을 고르지 않는다', () => {
+    const slots = [
+      { participantId: 'a', startAt: '2026-04-14T05:00:00Z', endAt: '2026-04-14T06:30:00Z', status: 'available' as const },
+      { participantId: 'b', startAt: '2026-04-14T05:00:00Z', endAt: '2026-04-14T06:30:00Z', status: 'available' as const },
+    ]
+
+    const result = findOptimalTime(slots, 60, eventStart, eventEnd, 2)
+    expect(result!.availableCount).toBe(2)
+    expect(result!.end).toBe('2026-04-14T06:00:00.000Z')
   })
 
   it('unavailable 슬롯은 무시', () => {

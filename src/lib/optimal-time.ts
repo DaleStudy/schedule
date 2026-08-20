@@ -18,10 +18,10 @@ export interface OptimalResult {
 const SLOT_MINUTES = 30
 
 /**
- * 가장 많은 사람이 참여 가능한 시간대를 찾는다.
+ * 가장 많은 사람이 참여 가능한 시간대를 찾는다. (마감 자동 확정용)
  *
- * 1차: 모든 셀에 참여 가능한 사람의 교집합이 가장 큰 윈도우
- * 2차: 교집합이 없으면, 셀별 최소 참여자가 가장 큰 윈도우 (부분 매칭)
+ * 후보 목록과 같은 규칙을 쓴다. 소요 시간을 다 채우지 못하더라도
+ * 더 많은 인원이 겹치는 구간이 있으면 그 구간을 겹치는 길이 그대로 반환한다.
  */
 export function findOptimalTime(
   slots: AvailabilitySlot[],
@@ -30,117 +30,15 @@ export function findOptimalTime(
   eventDateEnd: string,
   totalParticipants: number,
 ): OptimalResult | null {
-  const availableSlots = slots.filter((s) => s.status === 'available')
-  if (availableSlots.length === 0) return null
-
-  const rangeStart = dayjs.utc(eventDateStart).startOf('day')
-  const rangeEnd = dayjs.utc(eventDateEnd).endOf('day')
-
-  // 셀 단위 가용성 맵: timestamp -> Set<participantId>
-  const cellMap = new Map<string, Set<string>>()
-
-  for (const slot of availableSlots) {
-    const slotStart = dayjs.utc(slot.startAt)
-    const slotEnd = dayjs.utc(slot.endAt)
-
-    let cursor = slotStart
-    while (cursor.isBefore(slotEnd)) {
-      const cellKey = cursor.toISOString()
-      if (!cellMap.has(cellKey)) {
-        cellMap.set(cellKey, new Set())
-      }
-      cellMap.get(cellKey)!.add(slot.participantId)
-      cursor = cursor.add(SLOT_MINUTES, 'minute')
-    }
-  }
-
-  const requiredCells = Math.ceil(durationMinutes / SLOT_MINUTES)
-  let bestStart: string | null = null
-  let bestCount = 0
-  let bestParticipantIds: string[] = []
-
-  // 슬라이딩 윈도우로 최적 시간 탐색
-  let cursor = rangeStart
-  while (!cursor.add(durationMinutes, 'minute').isAfter(rangeEnd)) {
-    let windowParticipants: Set<string> | null = null
-
-    for (let i = 0; i < requiredCells; i++) {
-      const cellKey = cursor.add(i * SLOT_MINUTES, 'minute').toISOString()
-      const cellParticipants = cellMap.get(cellKey)
-
-      if (!cellParticipants || cellParticipants.size === 0) {
-        windowParticipants = new Set()
-        break
-      }
-
-      if (windowParticipants === null) {
-        windowParticipants = new Set(cellParticipants)
-      } else {
-        for (const p of windowParticipants) {
-          if (!cellParticipants.has(p)) {
-            windowParticipants.delete(p)
-          }
-        }
-      }
-    }
-
-    const count = windowParticipants?.size ?? 0
-    if (count > bestCount) {
-      bestCount = count
-      bestStart = cursor.toISOString()
-      bestParticipantIds = [...windowParticipants!]
-    }
-
-    cursor = cursor.add(SLOT_MINUTES, 'minute')
-  }
-
-  // 완전한 교집합을 찾은 경우
-  if (bestStart && bestCount > 0) {
-    return {
-      start: bestStart,
-      end: dayjs.utc(bestStart).add(durationMinutes, 'minute').toISOString(),
-      availableCount: bestCount,
-      totalParticipants,
-      availableParticipantIds: bestParticipantIds,
-    }
-  }
-
-  // 2차: 교집합이 없으면, 셀별 최소 참여자 수가 가장 높은 윈도우 선택
-  let fallbackStart: string | null = null
-  let fallbackMinCount = 0
-
-  cursor = rangeStart
-  while (!cursor.add(durationMinutes, 'minute').isAfter(rangeEnd)) {
-    let minInWindow = Infinity
-
-    for (let i = 0; i < requiredCells; i++) {
-      const cellKey = cursor.add(i * SLOT_MINUTES, 'minute').toISOString()
-      const cellParticipants = cellMap.get(cellKey)
-      minInWindow = Math.min(minInWindow, cellParticipants?.size ?? 0)
-    }
-
-    if (minInWindow > fallbackMinCount) {
-      fallbackMinCount = minInWindow
-      fallbackStart = cursor.toISOString()
-    }
-
-    cursor = cursor.add(SLOT_MINUTES, 'minute')
-  }
-
-  if (fallbackStart && fallbackMinCount > 0) {
-    return {
-      start: fallbackStart,
-      end: dayjs
-        .utc(fallbackStart)
-        .add(durationMinutes, 'minute')
-        .toISOString(),
-      availableCount: fallbackMinCount,
-      totalParticipants,
-      availableParticipantIds: [],
-    }
-  }
-
-  return null
+  const [best] = findTopCandidates(
+    slots,
+    durationMinutes,
+    eventDateStart,
+    eventDateEnd,
+    totalParticipants,
+    1,
+  )
+  return best ?? null
 }
 
 /**
