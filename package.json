@@ -17,7 +17,7 @@
 		"db:migrate:remote": "wrangler d1 migrations apply schedule --remote"
 	},
 	"dependencies": {
-		"@cloudflare/vite-plugin": "^1.42.3",
+		"@cloudflare/vite-plugin": "^1.63.2",
 		"@fontsource-variable/jetbrains-mono": "^5.2.8",
 		"@tailwindcss/vite": "^4.3.1",
 		"@tanstack/react-devtools": "^0.7.11",
@@ -50,6 +50,6 @@
 		"vite": "^7.3.6",
 		"vite-tsconfig-paths": "^5.1.4",
 		"vitest": "^3.2.6",
-		"wrangler": "^4.105.0"
+		"wrangler": "^4.150.0"
 	}
 }
