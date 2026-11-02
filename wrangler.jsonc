@@ -7,6 +7,8 @@
 	"main": "@tanstack/react-start/server-entry",
 	"observability": { "enabled": true },
 	"upload_source_maps": true,
+	// 운영 도메인이 미리보기도 받는다(previews_enabled). 미리보기는 pr-<번호>.schedule.dalestudy.com 에 뜬다
+	"routes": [{ "pattern": "schedule.dalestudy.com", "custom_domain": true, "previews_enabled": true }],
 	"d1_databases": [
 		{
 			"binding": "DB",
